@@ -7,6 +7,7 @@ import {
 } from '@/components';
 import { useFilters } from '@/context/FiltersContext';
 import { formatMinutes, formatNumber } from '@/utils/format';
+import TechnicianStopsModal from '@/features/operations/components/TechnicianStopsModal';
 
 const columns = [
   { key: 'technician', header: 'Technician', width: 150 },
@@ -20,6 +21,7 @@ const columns = [
 export default function StopsPerTechnicianScreen() {
   const { range, setRange } = useFilters();
   const [routeCode, setRouteCode] = useState('all');
+  const [selected, setSelected] = useState(null);
   const { from, to } = range;
 
   const opts = useApi(() => biService.driveTimeOptions(), []);
@@ -35,7 +37,7 @@ export default function StopsPerTechnicianScreen() {
 
   return (
     <Screen loading={loading || opts.loading} onRefresh={reload}>
-      <PageHeader title="Stops per Technician" subtitle="Completed stops per technician over the period, with average stops per active day." />
+      <PageHeader title="Stops per Technician" subtitle="Completed stops per technician. Tap a technician to see their stops (invoices) and line items." />
       <FilterBar>
         <DateRangeFilter value={range} onChange={setRange} min={opts.data && opts.data.earliestDate} max={opts.data && opts.data.latestDate} />
         <Select label="Route" value={routeCode} onChange={setRouteCode} options={[{ value: 'all', label: 'All routes' }, ...routeCodes.map((r) => ({ value: r, label: r }))]} />
@@ -52,10 +54,11 @@ export default function StopsPerTechnicianScreen() {
             </StatGrid>
             <BarChartCard title="Total stops by technician" data={chart} xKey="technician" bars={[{ key: 'stops', label: 'Stops', color: '#2563EB' }]} />
             <BarChartCard title="Avg stops per active day" data={chart} xKey="technician" bars={[{ key: 'avgStopsPerDay', label: 'Stops/day', color: '#10B981' }]} />
-            <DataTable title="Stops by technician" columns={columns} rows={rows} />
+            <DataTable title="Stops by technician" columns={columns} rows={rows} onRowClick={(r) => setSelected(r.technician)} />
           </>
         ) : null}
       </AsyncState>
+      {selected ? <TechnicianStopsModal technician={selected} range={range} onClose={() => setSelected(null)} /> : null}
     </Screen>
   );
 }

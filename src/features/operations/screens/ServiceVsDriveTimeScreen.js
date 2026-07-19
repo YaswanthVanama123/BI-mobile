@@ -23,6 +23,7 @@ const mkColumns = (keyName, keyHeader) => [
   { key: 'service', header: 'Service', align: 'right', width: 80, render: (r) => formatMinutes(r.service) },
   { key: 'drive', header: 'Drive', align: 'right', width: 80, render: (r) => formatMinutes(r.drive) },
   { key: 'idle', header: 'Idle', align: 'right', width: 80, render: (r) => formatMinutes(r.idle) },
+  { key: 'gap', header: 'Between stops', align: 'right', width: 120, render: (r) => formatMinutes(r.gap != null ? r.gap : (r.drive || 0) + (r.idle || 0)) },
   { key: 'stops', header: 'Stops', align: 'right', width: 70, render: (r) => formatNumber(r.stops) },
   { key: 'legs', header: 'Legs', align: 'right', width: 70, render: (r) => formatNumber(r.legs) },
 ];
@@ -35,6 +36,7 @@ const dayColumns = [
   { key: 'service', header: 'Service', align: 'right', width: 80, render: (r) => formatMinutes(r.service) },
   { key: 'drive', header: 'Drive', align: 'right', width: 80, render: (r) => formatMinutes(r.drive) },
   { key: 'idle', header: 'Idle / paperwork', align: 'right', width: 110, render: (r) => formatMinutes(r.idle) },
+  { key: 'gap', header: 'Between stops', align: 'right', width: 120, render: (r) => formatMinutes(r.gap != null ? r.gap : (r.drive || 0) + (r.idle || 0)) },
   { key: 'servicePct', header: 'Service % of active', align: 'right', width: 130, render: (r) => (r.servicePct != null ? <Badge tone={r.servicePct >= 60 ? 'success' : 'warning'}>{formatPercent(r.servicePct)}</Badge> : '-') },
 ];
 

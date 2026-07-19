@@ -21,7 +21,7 @@ function MappingModal({ item, categoryOptions, onSaved, onClose }) {
     if (!category) { Alert.alert('Pick a category', 'Choose a service category to map this item to.'); return; }
     setBusy(true);
     try {
-      await biService.createItemCategoryMapping({ sourceItemCode: item.sourceItemCode, sourceDescription: item.sourceDescription, serviceCategory: category });
+      await biService.createItemCategoryMapping({ matchType: 'exact_code', matchValue: item.sourceItemCode, serviceCategoryId: category, priority: 100, reviewStatus: 'approved' });
       await onSaved();
       onClose();
     } catch (e) {
@@ -53,8 +53,8 @@ export default function UnmappedItemsScreen() {
   const rows = data || [];
 
   const categoryOptions = ((cats.data || [])).map((c) => {
-    const val = typeof c === 'string' ? c : (c.name || c.serviceCategory || c.category || c._id);
-    const lbl = typeof c === 'string' ? c : (c.name || c.serviceCategory || c.category || String(val));
+    const val = typeof c === 'string' ? c : (c._id || c.serviceCategoryId || c.categoryCode || c.name);
+    const lbl = typeof c === 'string' ? c : (c.name || c.categoryCode || String(val));
     return { value: val, label: lbl };
   });
 
