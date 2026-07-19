@@ -1,0 +1,7 @@
+node_modules/
+android/
+ios/
+.expo/
+*.log
+src/constants/env.local.js
+.DS_Store

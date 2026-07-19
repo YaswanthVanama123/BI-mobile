@@ -1,0 +1,18 @@
+current directory: /Users/yaswanthgandhi/Documents/BI/mobile/vendor/bundle/ruby/4.0.0/gems/nkf-0.3.0/ext/nkf
+/opt/homebrew/opt/ruby/bin/ruby extconf.rb
+creating Makefile
+
+current directory: /Users/yaswanthgandhi/Documents/BI/mobile/vendor/bundle/ruby/4.0.0/gems/nkf-0.3.0/ext/nkf
+make -j15 DESTDIR\= sitearchdir\=./.gem.20260719-76719-6czqkn sitelibdir\=./.gem.20260719-76719-6czqkn clean
+
+current directory: /Users/yaswanthgandhi/Documents/BI/mobile/vendor/bundle/ruby/4.0.0/gems/nkf-0.3.0/ext/nkf
+make -j15 DESTDIR\= sitearchdir\=./.gem.20260719-76719-6czqkn sitelibdir\=./.gem.20260719-76719-6czqkn
+compiling nkf.c
+linking shared-object nkf.bundle
+
+current directory: /Users/yaswanthgandhi/Documents/BI/mobile/vendor/bundle/ruby/4.0.0/gems/nkf-0.3.0/ext/nkf
+make -j15 DESTDIR\= sitearchdir\=./.gem.20260719-76719-6czqkn sitelibdir\=./.gem.20260719-76719-6czqkn install
+/usr/bin/install -c -m 0755 nkf.bundle ./.gem.20260719-76719-6czqkn
+
+current directory: /Users/yaswanthgandhi/Documents/BI/mobile/vendor/bundle/ruby/4.0.0/gems/nkf-0.3.0/ext/nkf
+make DESTDIR\= sitearchdir\=./.gem.20260719-76719-6czqkn sitelibdir\=./.gem.20260719-76719-6czqkn clean
