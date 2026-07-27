@@ -11,22 +11,13 @@ import CustomerRevenueModal from '@/features/revenue/components/CustomerRevenueM
 
 const pctTone = (p) => (p == null ? 'neutral' : p >= 90 ? 'success' : p >= 50 ? 'warning' : 'danger');
 
-const columns = [
-  { key: 'customer', header: 'Customer', width: 180 },
-  { key: 'routeCode', header: 'Route', width: 80 },
-  { key: 'expected', header: 'Expected', align: 'right', width: 100, render: (r) => formatCurrency(r.expected) },
-  { key: 'invoiced', header: 'Invoiced', align: 'right', width: 100, render: (r) => formatCurrency(r.invoiced) },
-  { key: 'remaining', header: 'Remaining', align: 'right', width: 100, render: (r) => formatCurrency(r.remaining) },
-  { key: 'pct', header: 'Collected', align: 'right', width: 90, render: (r) => (r.pct != null ? <Badge tone={pctTone(r.pct)}>{formatPercent(r.pct)}</Badge> : '—') },
-  { key: 'invoices', header: 'Invoices', align: 'right', width: 70, render: (r) => formatNumber(r.invoices) },
-];
-
 export default function RevenueByCustomerScreen() {
   const { range, setRange } = useFilters();
   const [routeCode, setRouteCode] = useState('all');
   const [q, setQ] = useState('');
   const [selected, setSelected] = useState(null);
   const { from, to } = range;
+  const isAllTime = range.preset === 'all_time';
 
   const opts = useApi(() => biService.driveTimeOptions(), []);
   const { data, loading, error, reload } = useApi(() => biService.revenueByCustomer({ from, to, routeCode }), [from, to, routeCode]);
@@ -36,10 +27,19 @@ export default function RevenueByCustomerScreen() {
   const term = q.trim().toLowerCase();
   const filtered = useMemo(() => (term ? rows.filter((r) => `${r.customer} ${r.routeCode}`.toLowerCase().includes(term)) : rows), [rows, term]);
   const topChart = rows.slice(0, 12);
+  const columns = useMemo(() => [
+    { key: 'customer', header: 'Customer', width: 180 },
+    { key: 'routeCode', header: 'Route', width: 80 },
+    ...(isAllTime ? [{ key: 'expected', header: 'Expected', align: 'right', width: 100, render: (r) => formatCurrency(r.expected) }] : []),
+    { key: 'invoiced', header: 'Invoiced', align: 'right', width: 100, render: (r) => formatCurrency(r.invoiced) },
+    ...(isAllTime ? [{ key: 'remaining', header: 'Remaining', align: 'right', width: 100, render: (r) => formatCurrency(r.remaining) }] : []),
+    { key: 'pct', header: 'Collected', align: 'right', width: 90, render: (r) => (r.pct != null ? <Badge tone={pctTone(r.pct)}>{formatPercent(r.pct)}</Badge> : '—') },
+    { key: 'invoices', header: 'Invoices', align: 'right', width: 70, render: (r) => formatNumber(r.invoices) },
+  ], [isAllTime]);
 
   return (
     <Screen loading={loading} onRefresh={reload}>
-      <PageHeader title="Revenue by Customer" subtitle="Expected annual vs actually invoiced vs remaining. Tap a customer for the per-item breakdown and their invoices." />
+      <PageHeader title="Revenue by Customer" subtitle="Invoiced revenue per customer for the selected period (Expected / Remaining show on All time). Tap a customer for the per-item breakdown and their invoices." />
       <FilterBar>
         <DateRangeFilter value={range} onChange={setRange} min={opts.data && opts.data.earliestDate} max={opts.data && opts.data.latestDate} />
         <Select label="Route" value={routeCode} onChange={setRouteCode} options={[{ value: 'all', label: 'All routes' }, ...routeCodes.map((r) => ({ value: r, label: r }))]} />
@@ -50,13 +50,15 @@ export default function RevenueByCustomerScreen() {
         {k ? (
           <>
             <StatGrid columns={2}>
-              <StatCard label="Expected (yr)" value={formatCurrency(k.expected)} tone="info" />
+              {isAllTime ? <StatCard label="Expected (yr)" value={formatCurrency(k.expected)} tone="info" /> : null}
               <StatCard label="Invoiced" value={formatCurrency(k.invoiced)} tone="success" />
-              <StatCard label="Remaining" value={formatCurrency(k.remaining)} tone={k.remaining > 0 ? 'warning' : 'success'} />
+              {isAllTime ? <StatCard label="Remaining" value={formatCurrency(k.remaining)} tone={k.remaining > 0 ? 'warning' : 'success'} /> : null}
               <StatCard label="Collected" value={k.collectedPct != null ? formatPercent(k.collectedPct) : '—'} sublabel={`${formatNumber(k.customers)} customers`} tone={pctTone(k.collectedPct)} />
             </StatGrid>
             <BarChartCard title="Top 12 by invoiced" data={topChart} xKey="customer"
-              bars={[{ key: 'invoiced', label: 'Invoiced', color: '#10B981' }, { key: 'remaining', label: 'Remaining', color: '#F59E0B' }]} />
+              bars={isAllTime
+                ? [{ key: 'invoiced', label: 'Invoiced', color: '#10B981' }, { key: 'remaining', label: 'Remaining', color: '#F59E0B' }]
+                : [{ key: 'invoiced', label: 'Invoiced', color: '#10B981' }]} />
             <DataTable title="Customers" columns={columns} rows={filtered} onRowClick={(r) => setSelected(r.customerId)} />
           </>
         ) : null}
