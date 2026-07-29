@@ -22,9 +22,12 @@ const biService = {
   revenueByCategory: (f) => get('/revenue/by-category', f),
   revenueCategoryDetail: (f) => get('/revenue/category-detail', f),
   revenueByRoute: (f) => get('/revenue/by-route', f),
+  revenueRouteDetail: (f) => get('/revenue/route-detail', f),
+  revenueDrill: (f) => get('/revenue/drill', f),
   revenueByCustomer: (f) => get('/revenue/by-customer', f),
   revenueCustomerDetail: (id, f) => get(`/revenue/customer/${encodeURIComponent(id)}`, f),
   revenuePerStop: (f) => get('/revenue/per-stop', f),
+  customersOverview: (f) => get('/customer-overview', f),
 
   payrollCost: (f) => get('/payroll/cost', f),
   uploadPayrollCsv: (file) => upload('/payroll/upload', file),

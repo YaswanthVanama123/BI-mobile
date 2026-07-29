@@ -3,49 +3,13 @@ import useApi from '@/hooks/useApi';
 import biService from '@/api/biService';
 import {
   Screen, PageHeader, FilterBar, DateRangeFilter, Select, AsyncState, DataTable,
-  StatGrid, StatCard, Badge, DetailModal, PieChartCard, BarChartCard,
+  StatGrid, StatCard, Badge, PieChartCard, BarChartCard,
 } from '@/components';
 import { useFilters } from '@/context/FiltersContext';
 import { formatCurrency, formatNumber, formatPercent } from '@/utils/format';
-import CustomerRevenueModal from '@/features/revenue/components/CustomerRevenueModal';
-import InvoiceLinesModal from '@/features/revenue/components/InvoiceLinesModal';
+import DrillModal from '@/features/revenue/components/DrillModal';
 
 const pctTone = (p) => (p == null ? 'neutral' : p >= 90 ? 'success' : p >= 50 ? 'warning' : 'danger');
-
-const custColumns = [
-  { key: 'customer', header: 'Customer', width: 170 },
-  { key: 'routeCode', header: 'Route', width: 80 },
-  { key: 'expected', header: 'Expected', align: 'right', width: 100, render: (r) => formatCurrency(r.expected) },
-  { key: 'invoiced', header: 'Invoiced', align: 'right', width: 100, render: (r) => formatCurrency(r.invoiced) },
-  { key: 'remaining', header: 'Remaining', align: 'right', width: 100, render: (r) => formatCurrency(r.remaining) },
-];
-const invColumns = [
-  { key: 'invoiceNumber', header: 'Invoice #', width: 110 },
-  { key: 'customer', header: 'Customer', width: 160 },
-  { key: 'date', header: 'Date', width: 100 },
-  { key: 'amount', header: 'Amount', align: 'right', width: 110, render: (r) => formatCurrency(r.amount) },
-];
-
-function CategoryModal({ category, range, routeCode, onClose }) {
-  const { from, to } = range || {};
-  const { data, loading, error, reload } = useApi(() => biService.revenueCategoryDetail({ name: category, from, to, routeCode }), [category, from, to, routeCode]);
-  const [invoice, setInvoice] = useState(null);
-  const [customer, setCustomer] = useState(null);
-  return (
-    <DetailModal visible={!!category} onClose={onClose} title={`Category: ${category}`}>
-      <AsyncState loading={loading} error={error} empty={!loading && !error && !data} onRetry={reload}>
-        {data ? (
-          <>
-            <DataTable title={`Customers (${(data.customers || []).length}) — tap to drill`} columns={custColumns} rows={data.customers || []} onRowClick={(r) => setCustomer(r.customerId)} />
-            <DataTable title={`Invoices with ${category} lines (${(data.invoices || []).length})`} columns={invColumns} rows={data.invoices || []} onRowClick={(r) => setInvoice(r.invoiceNumber)} />
-          </>
-        ) : null}
-      </AsyncState>
-      {invoice ? <InvoiceLinesModal invoiceNumber={invoice} onClose={() => setInvoice(null)} /> : null}
-      {customer ? <CustomerRevenueModal customerId={customer} range={range} onClose={() => setCustomer(null)} /> : null}
-    </DetailModal>
-  );
-}
 
 export default function RevenueByCategoryScreen() {
   const { range, setRange } = useFilters();
@@ -69,7 +33,7 @@ export default function RevenueByCategoryScreen() {
 
   return (
     <Screen loading={loading} onRefresh={reload}>
-      <PageHeader title="Revenue by Category" subtitle="Invoiced revenue per item for the selected period (Remaining shows on All time). Tap a row for customers & invoices." />
+      <PageHeader title="Revenue by Category" subtitle="Invoiced revenue per item for the selected period (Remaining shows on All time). Tap a row for customers, invoices & items." />
       <FilterBar>
         <DateRangeFilter value={range} onChange={setRange} min={opts.data && opts.data.earliestDate} max={opts.data && opts.data.latestDate} />
         <Select label="Route" value={routeCode} onChange={setRouteCode} options={[{ value: 'all', label: 'All routes' }, ...routeCodes.map((r) => ({ value: r, label: r }))]} />
@@ -94,7 +58,15 @@ export default function RevenueByCategoryScreen() {
         ) : null}
       </AsyncState>
 
-      {selected ? <CategoryModal category={selected} range={range} routeCode={routeCode} onClose={() => setSelected(null)} /> : null}
+      {selected ? (
+        <DrillModal
+          title={`Category: ${selected}`}
+          subtitle="Customers, invoices and items for this category in the selected period"
+          filter={{ category: selected, routeCode: routeCode === 'all' ? undefined : routeCode }}
+          range={range}
+          onClose={() => setSelected(null)}
+        />
+      ) : null}
     </Screen>
   );
 }

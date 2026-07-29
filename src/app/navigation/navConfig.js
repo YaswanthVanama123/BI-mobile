@@ -15,6 +15,7 @@ import PayrollCostScreen from '@/features/cost/screens/PayrollCostScreen';
 import LaborPerStopScreen from '@/features/cost/screens/LaborPerStopScreen';
 import RouteProfitabilityScreen from '@/features/cost/screens/RouteProfitabilityScreen';
 import CustomersScreen from '@/features/reference/screens/CustomersScreen';
+import CustomerOverviewScreen from '@/features/reference/screens/CustomerOverviewScreen';
 import ConnectionsScreen from '@/features/governance/screens/ConnectionsScreen';
 import DataQualityScreen from '@/features/governance/screens/DataQualityScreen';
 import UnmappedItemsScreen from '@/features/governance/screens/UnmappedItemsScreen';
@@ -58,7 +59,10 @@ export const NAV = [
   },
   {
     section: 'Reference',
-    items: [{ name: 'Customers', label: 'Customers', icon: 'people-outline', component: CustomersScreen }],
+    items: [
+      { name: 'CustomerOverview', label: 'Customer Overview', icon: 'person-circle-outline', component: CustomerOverviewScreen },
+      { name: 'Customers', label: 'Customers', icon: 'people-outline', component: CustomersScreen },
+    ],
   },
   {
     section: 'Governance',

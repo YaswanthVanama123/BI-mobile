@@ -29,7 +29,7 @@ export default function RevenueByCustomerScreen() {
   const topChart = rows.slice(0, 12);
   const columns = useMemo(() => [
     { key: 'customer', header: 'Customer', width: 180 },
-    { key: 'routeCode', header: 'Route', width: 80 },
+    { key: 'routeCode', header: 'Route', width: 120, render: (r) => (r.routes && r.routes.length ? r.routes.join(', ') : r.routeCode) },
     ...(isAllTime ? [{ key: 'expected', header: 'Expected', align: 'right', width: 100, render: (r) => formatCurrency(r.expected) }] : []),
     { key: 'invoiced', header: 'Invoiced', align: 'right', width: 100, render: (r) => formatCurrency(r.invoiced) },
     ...(isAllTime ? [{ key: 'remaining', header: 'Remaining', align: 'right', width: 100, render: (r) => formatCurrency(r.remaining) }] : []),
@@ -59,12 +59,12 @@ export default function RevenueByCustomerScreen() {
               bars={isAllTime
                 ? [{ key: 'invoiced', label: 'Invoiced', color: '#10B981' }, { key: 'remaining', label: 'Remaining', color: '#F59E0B' }]
                 : [{ key: 'invoiced', label: 'Invoiced', color: '#10B981' }]} />
-            <DataTable title="Customers" columns={columns} rows={filtered} onRowClick={(r) => setSelected(r.customerId)} />
+            <DataTable title="Customers" columns={columns} rows={filtered} onRowClick={(r) => setSelected(r)} />
           </>
         ) : null}
       </AsyncState>
 
-      {selected ? <CustomerRevenueModal customerId={selected} range={range} onClose={() => setSelected(null)} /> : null}
+      {selected ? <CustomerRevenueModal customerId={selected.customerId} customerName={selected.customer} routes={selected.routes} range={range} onClose={() => setSelected(null)} /> : null}
     </Screen>
   );
 }

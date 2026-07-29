@@ -5,10 +5,11 @@ import useDebounce from '@/hooks/useDebounce';
 import biService from '@/api/biService';
 import {
   Screen, PageHeader, SearchInput, AsyncState, DataTable, Pager,
-  Badge, Card, DetailModal, SectionTitle, Muted,
+  Badge, Card, DetailModal, SectionTitle, Muted, StatGrid, StatCard,
 } from '@/components';
 import theme from '@/theme';
-import { statusTone, formatNumber } from '@/utils/format';
+import { statusTone, formatNumber, formatCurrency } from '@/utils/format';
+import InvoiceLinesModal from '@/features/revenue/components/InvoiceLinesModal';
 
 const PAGE_SIZE = 25;
 
@@ -28,6 +29,19 @@ const pricingColumns = [
   { key: 'defaultQty', header: 'Qty', align: 'right', width: 70, render: (r) => r.defaultQty || '—' },
   { key: 'frequency', header: 'Frequency', width: 120, render: (r) => r.frequency || '—' },
 ];
+const invoiceColumns = [
+  { key: 'invoiceNumber', header: 'Invoice #', width: 110 },
+  { key: 'date', header: 'Date', width: 100 },
+  { key: 'lineCount', header: 'Lines', align: 'right', width: 60, render: (r) => formatNumber(r.lineCount) },
+  { key: 'total', header: 'Total', align: 'right', width: 100, render: (r) => formatCurrency(r.total) },
+];
+const itemColumns = [
+  { key: 'item', header: 'Item', width: 180 },
+  { key: 'category', header: 'Category', width: 140 },
+  { key: 'qty', header: 'Qty', align: 'right', width: 60, render: (r) => formatNumber(r.qty) },
+  { key: 'lines', header: 'Lines', align: 'right', width: 60, render: (r) => formatNumber(r.lines) },
+  { key: 'invoiced', header: 'Invoiced', align: 'right', width: 100, render: (r) => formatCurrency(r.invoiced) },
+];
 
 const addrLine = (a) => [a && a.line1, a && a.line2, a && a.line3].filter(Boolean).join(', ');
 const cityLine = (a) => [a && a.city, a && a.state, a && a.zip].filter(Boolean).join(', ');
@@ -40,8 +54,22 @@ function routeColumns(routes) {
   return ordered.map((k) => ({ key: k, header: k.replace(/\.$/, ''), width: 140, render: (r) => (r[k] != null && r[k] !== '' ? String(r[k]) : '—') }));
 }
 
+function TabBtn({ active, onPress, children }) {
+  return (
+    <TouchableOpacity onPress={onPress} style={[tabStyles.tab, active && tabStyles.tabActive]} activeOpacity={0.7}>
+      <Text style={[tabStyles.tabText, active && tabStyles.tabTextActive]}>{children}</Text>
+    </TouchableOpacity>
+  );
+}
+
 function CustomerDetailModal({ customerId, onClose }) {
   const { data, loading, error, reload } = useApi(() => biService.customerAccount(customerId), [customerId]);
+  const drill = useApi(() => biService.revenueDrill({ customerId }), [customerId]);
+  const [tab, setTab] = useState('invoices');
+  const [invoice, setInvoice] = useState(null);
+  const invoices = (drill.data && drill.data.invoices) || [];
+  const items = (drill.data && drill.data.items) || [];
+  const dk = drill.data && drill.data.kpis;
   return (
     <DetailModal visible={!!customerId} onClose={onClose} title={(data && data.customerName) || 'Customer detail'}>
       <AsyncState loading={loading} error={error} empty={!loading && !error && !data} onRetry={reload}>
@@ -77,24 +105,47 @@ function CustomerDetailModal({ customerId, onClose }) {
               <Muted>{cityLine(data.billing)}</Muted>
             </Card>
 
-            <View>
-              <SectionTitle>Pricing ({(data.pricing && data.pricing.length) || 0})</SectionTitle>
-              {data.pricing && data.pricing.length
-                ? <DataTable columns={pricingColumns} rows={data.pricing} maxRows={500} />
-                : <Muted>No pricing captured yet — run Sync to fetch it.</Muted>}
+            {dk ? (
+              <StatGrid columns={3}>
+                <StatCard label="Invoiced" value={formatCurrency(dk.invoiced)} tone="success" />
+                <StatCard label="Invoices" value={formatNumber(dk.stops)} />
+                <StatCard label="Items" value={formatNumber(dk.items)} />
+              </StatGrid>
+            ) : null}
+
+            <View style={tabStyles.row}>
+              <TabBtn active={tab === 'invoices'} onPress={() => setTab('invoices')}>Invoices ({invoices.length})</TabBtn>
+              <TabBtn active={tab === 'items'} onPress={() => setTab('items')}>Items ({items.length})</TabBtn>
+              <TabBtn active={tab === 'routes'} onPress={() => setTab('routes')}>Routes ({(data.routes && data.routes.length) || 0})</TabBtn>
+              <TabBtn active={tab === 'pricing'} onPress={() => setTab('pricing')}>Pricing ({(data.pricing && data.pricing.length) || 0})</TabBtn>
             </View>
 
-            <View>
-              <SectionTitle>Routes ({(data.routes && data.routes.length) || 0})</SectionTitle>
-              {data.routes && data.routes.length
+            {tab === 'invoices' ? (
+              drill.loading ? <Muted>Loading invoices…</Muted>
+                : invoices.length ? <DataTable columns={invoiceColumns} rows={invoices} maxRows={500} onRowClick={(r) => setInvoice(r.invoiceNumber)} />
+                : <Muted>No invoices created for this customer.</Muted>
+            ) : null}
+            {tab === 'items' ? (
+              drill.loading ? <Muted>Loading items…</Muted>
+                : items.length ? <DataTable columns={itemColumns} rows={items} maxRows={500} />
+                : <Muted>No invoiced items for this customer.</Muted>
+            ) : null}
+            {tab === 'routes' ? (
+              data.routes && data.routes.length
                 ? <DataTable columns={routeColumns(data.routes)} rows={data.routes} maxRows={500} />
-                : <Muted>No routes for this customer.</Muted>}
-            </View>
+                : <Muted>No routes for this customer.</Muted>
+            ) : null}
+            {tab === 'pricing' ? (
+              data.pricing && data.pricing.length
+                ? <DataTable columns={pricingColumns} rows={data.pricing} maxRows={500} />
+                : <Muted>No pricing captured yet — run Sync to fetch it.</Muted>
+            ) : null}
 
             <Muted>Source: {data.source}{data.fetchedAt ? ` · fetched ${new Date(data.fetchedAt).toLocaleString()}` : ''}</Muted>
           </View>
         ) : null}
       </AsyncState>
+      {invoice ? <InvoiceLinesModal invoiceNumber={invoice} onClose={() => setInvoice(null)} /> : null}
     </DetailModal>
   );
 }
@@ -197,4 +248,12 @@ const styles = StyleSheet.create({
   cardHeadText: { fontSize: 13.5, fontWeight: '700', color: theme.colors.dark[700] },
   addr: { fontSize: 14, color: theme.colors.dark[700] },
   latlng: { fontSize: 11.5, color: theme.textFaint, marginTop: 4 },
+});
+
+const tabStyles = StyleSheet.create({
+  row: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
+  tab: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8, backgroundColor: theme.card, borderWidth: StyleSheet.hairlineWidth, borderColor: theme.border },
+  tabActive: { backgroundColor: theme.colors.dark[800], borderColor: theme.colors.dark[800] },
+  tabText: { fontSize: 12.5, color: theme.colors.dark[600], fontWeight: '600' },
+  tabTextActive: { color: '#fff' },
 });
