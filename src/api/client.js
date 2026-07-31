@@ -53,11 +53,15 @@ export async function patch(url, body = {}) {
   return api.patch(url, body);
 }
 
+export async function del(url) {
+  return api.delete(url);
+}
+
 export async function upload(url, file, field = 'file') {
   const form = new FormData();
   form.append(field, { uri: file.uri, name: file.name || 'upload.csv', type: file.type || 'text/csv' });
   return api.post(url, form, { headers: { 'Content-Type': 'multipart/form-data' }, timeout: 120000 });
 }
 
-export default { get, post, patch, upload };
+export default { get, post, patch, del, upload };
 

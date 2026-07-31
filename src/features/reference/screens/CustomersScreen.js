@@ -4,7 +4,7 @@ import useApi from '@/hooks/useApi';
 import useDebounce from '@/hooks/useDebounce';
 import biService from '@/api/biService';
 import {
-  Screen, PageHeader, SearchInput, AsyncState, DataTable, Pager,
+  Screen, PageHeader, DateRangeFilter, SearchInput, AsyncState, DataTable, Pager,
   Badge, Card, DetailModal, SectionTitle, Muted, StatGrid, StatCard,
 } from '@/components';
 import theme from '@/theme';
@@ -20,6 +20,7 @@ const columns = [
   { key: 'routeCode', header: 'Route', width: 90 },
   { key: 'frequency', header: 'Frequency', width: 120 },
   { key: 'customerStatus', header: 'Status', width: 110, render: (r) => <Badge tone={statusTone(r.customerStatus)}>{r.customerStatus}</Badge> },
+  { key: 'createdDate', header: 'Created', width: 110, render: (r) => r.createdDate || '—' },
 ];
 
 const pricingColumns = [
@@ -153,16 +154,18 @@ function CustomerDetailModal({ customerId, onClose }) {
 export default function CustomersScreen() {
   const [q, setQ] = useState('');
   const dq = useDebounce(q, 400);
+  const [range, setRange] = useState({ preset: 'all_time', from: '', to: '' });
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState(null);
   const [job, setJob] = useState(null);
   const pollRef = useRef(null);
   const running = !!(job && job.running);
-  useEffect(() => { setPage(1); }, [dq]);
+  const { from, to } = range;
+  useEffect(() => { setPage(1); }, [dq, from, to]);
 
   const { data, page: pageInfo, meta, loading, error, reload } = useApi(
-    () => biService.customers({ q: dq || undefined, page, pageSize: PAGE_SIZE }),
-    [dq, page],
+    () => biService.customers({ q: dq || undefined, from: from || undefined, to: to || undefined, page, pageSize: PAGE_SIZE }),
+    [dq, from, to, page],
   );
   const rows = data || [];
   const total = (pageInfo && pageInfo.total) || (meta && meta.total) || 0;
@@ -207,7 +210,8 @@ export default function CustomersScreen() {
         <Text style={styles.syncText}>{running ? 'Syncing…' : 'Sync account numbers'}</Text>
       </TouchableOpacity>
 
-      <View style={{ marginBottom: 12 }}>
+      <View style={{ marginBottom: 12, gap: 10 }}>
+        <DateRangeFilter value={range} onChange={setRange} />
         <SearchInput value={q} onChangeText={setQ} placeholder="Search name / account # / RouteStar ID…" />
       </View>
 
@@ -223,7 +227,7 @@ export default function CustomersScreen() {
       <AsyncState loading={loading} error={error} empty={!loading && !error && rows.length === 0} onRetry={reload}>
         {rows.length ? (
           <>
-            <DataTable title="Customers" columns={columns} rows={rows} paginated={false} onRowClick={(r) => setSelected(r.routeStarCustomerId)} />
+            <DataTable title="Customers" columns={columns} rows={rows} paginated={false} searchable={false} onRowClick={(r) => setSelected(r.routeStarCustomerId)} />
             <Pager page={page} totalPages={totalPages} total={total} loading={loading} onPrev={() => setPage((p) => Math.max(1, p - 1))} onNext={() => setPage((p) => Math.min(totalPages, p + 1))} />
           </>
         ) : null}

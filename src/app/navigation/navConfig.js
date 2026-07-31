@@ -21,6 +21,7 @@ import DataQualityScreen from '@/features/governance/screens/DataQualityScreen';
 import UnmappedItemsScreen from '@/features/governance/screens/UnmappedItemsScreen';
 import ImportBatchesScreen from '@/features/governance/screens/ImportBatchesScreen';
 import SyncStatusScreen from '@/features/governance/screens/SyncStatusScreen';
+import UserManagementScreen from '@/features/admin/screens/UserManagementScreen';
 
 export const NAV = [
   {
@@ -72,6 +73,12 @@ export const NAV = [
       { name: 'UnmappedItems', label: 'Unmapped Items', icon: 'pricetag-outline', component: UnmappedItemsScreen },
       { name: 'ImportBatches', label: 'Import Batches', icon: 'server-outline', component: ImportBatchesScreen },
       { name: 'SyncStatus', label: 'Sync Status', icon: 'refresh-outline', component: SyncStatusScreen },
+    ],
+  },
+  {
+    section: 'Administration',
+    items: [
+      { name: 'UserManagement', label: 'User Management', icon: 'shield-checkmark-outline', component: UserManagementScreen, adminOnly: true },
     ],
   },
 ];

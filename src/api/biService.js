@@ -1,6 +1,12 @@
-import { get, post, patch, upload } from '@/api/client';
+import { get, post, patch, del, upload } from '@/api/client';
 
 const biService = {
+  login: (body) => post('/auth/login', body),
+  me: () => get('/auth/me'),
+  users: () => get('/users'),
+  createUser: (body) => post('/users', body),
+  updateUser: (id, body) => patch(`/users/${encodeURIComponent(id)}`, body),
+  deleteUser: (id) => del(`/users/${encodeURIComponent(id)}`),
   technicianUtilization: (f) => get('/ops/technician-utilization', f),
   stopsPerTechnician: (f) => get('/ops/stops-per-technician', f),
   stopVolumeTrends: (f) => get('/ops/stop-volume', f),

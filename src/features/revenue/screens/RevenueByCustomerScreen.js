@@ -59,7 +59,7 @@ export default function RevenueByCustomerScreen() {
               bars={isAllTime
                 ? [{ key: 'invoiced', label: 'Invoiced', color: '#10B981' }, { key: 'remaining', label: 'Remaining', color: '#F59E0B' }]
                 : [{ key: 'invoiced', label: 'Invoiced', color: '#10B981' }]} />
-            <DataTable title="Customers" columns={columns} rows={filtered} onRowClick={(r) => setSelected(r)} />
+            <DataTable title="Customers" columns={columns} rows={filtered} searchable={false} onRowClick={(r) => setSelected(r)} />
           </>
         ) : null}
       </AsyncState>

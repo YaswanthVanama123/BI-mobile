@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Share, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Share, Alert, TextInput } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import theme from '@/theme';
 import { rowsToCsv } from '@/utils/csv';
@@ -8,9 +8,15 @@ const DEFAULT_W = 130;
 
 export default function DataTable({
   columns, rows, onRowClick, title, keyExtractor, exportName,
-  paginated = true, pageSize = 25, maxRows = 500,
+  paginated = true, pageSize = 25, maxRows = 500, searchable = true, searchPlaceholder = 'Search…',
 }) {
-  const data = Array.isArray(rows) ? rows : [];
+  const allData = Array.isArray(rows) ? rows : [];
+  const [query, setQuery] = useState('');
+  const qq = query.trim().toLowerCase();
+  const showSearch = searchable && allData.length > 5;
+  const data = qq
+    ? allData.filter((row) => Object.values(row).some((v) => v != null && typeof v !== 'object' && String(v).toLowerCase().includes(qq)))
+    : allData;
   const total = data.length;
   const totalPages = paginated ? Math.max(1, Math.ceil(total / pageSize)) : 1;
   const [page, setPage] = useState(0);
@@ -52,6 +58,21 @@ export default function DataTable({
           ) : null}
         </View>
       </View>
+
+      {showSearch ? (
+        <View style={styles.searchWrap}>
+          <Ionicons name="search-outline" size={15} color={theme.textFaint} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder={searchPlaceholder}
+            placeholderTextColor={theme.textFaint}
+            value={query}
+            onChangeText={setQuery}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+        </View>
+      ) : null}
 
       <ScrollView horizontal showsHorizontalScrollIndicator bounces={false} contentContainerStyle={styles.scrollContent}>
         <View style={{ width: totalW }}>
@@ -133,6 +154,8 @@ const styles = StyleSheet.create({
     ...theme.shadow,
   },
   head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: theme.border },
+  searchWrap: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: theme.border, backgroundColor: theme.card },
+  searchInput: { flex: 1, fontSize: 13, color: theme.text, paddingVertical: 2 },
   title: { fontSize: 13.5, fontWeight: '700', color: theme.colors.dark[700], flex: 1, marginRight: 10 },
   headRight: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   count: { fontSize: 11.5, color: theme.textFaint },

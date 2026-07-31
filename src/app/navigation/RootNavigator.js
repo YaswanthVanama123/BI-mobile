@@ -1,28 +1,36 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createDrawerNavigator, DrawerContentScrollView } from '@react-navigation/drawer';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NAV, NAV_ITEMS } from '@/app/navigation/navConfig';
+import { useAuth } from '@/context/AuthContext';
+import LoginScreen from '@/features/auth/screens/LoginScreen';
 import theme from '@/theme';
 
 const Drawer = createDrawerNavigator();
 
 function DrawerContent(props) {
   const insets = useSafeAreaInsets();
+  const { user, isAdmin, logout } = useAuth();
   const current = props.state.routeNames[props.state.index];
+  const groups = NAV
+    .map((g) => ({ ...g, items: g.items.filter((it) => !it.adminOnly || isAdmin) }))
+    .filter((g) => g.items.length > 0);
+  const initials = ((user && (user.name || user.username)) || '?').trim().slice(0, 2).toUpperCase();
+
   return (
     <View style={{ flex: 1, backgroundColor: theme.card }}>
       <View style={[styles.brand, { paddingTop: insets.top + 14 }]}>
         <View style={styles.logo}><Text style={styles.logoText}>EM</Text></View>
         <View>
           <Text style={styles.brandTitle}>EnviroMaster BI</Text>
-          <Text style={styles.brandSub}>Operational & Financial</Text>
+          <Text style={styles.brandSub}>Operational &amp; Financial</Text>
         </View>
       </View>
       <DrawerContentScrollView {...props} contentContainerStyle={{ paddingTop: 4 }}>
-        {NAV.map((group) => (
+        {groups.map((group) => (
           <View key={group.section} style={styles.group}>
             <Text style={styles.groupTitle}>{group.section}</Text>
             {group.items.map((item) => {
@@ -42,6 +50,18 @@ function DrawerContent(props) {
           </View>
         ))}
       </DrawerContentScrollView>
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 10 }]}>
+        <View style={styles.userRow}>
+          <View style={styles.avatar}><Text style={styles.avatarText}>{initials}</Text></View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.userName} numberOfLines={1}>{(user && (user.name || user.username)) || ''}</Text>
+            <Text style={styles.userSub} numberOfLines={1}>{user ? `${user.username} · ${user.role}` : ''}</Text>
+          </View>
+          <TouchableOpacity onPress={logout} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <Ionicons name="log-out-outline" size={20} color="#dc2626" />
+          </TouchableOpacity>
+        </View>
+      </View>
     </View>
   );
 }
@@ -52,6 +72,19 @@ const navTheme = {
 };
 
 export default function RootNavigator() {
+  const { loading, isAuthenticated, isAdmin } = useAuth();
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.bg }}>
+        <ActivityIndicator size="large" color={theme.colors.primary[600]} />
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) return <LoginScreen />;
+
+  const items = NAV_ITEMS.filter((it) => !it.adminOnly || isAdmin);
   return (
     <NavigationContainer theme={navTheme}>
       <Drawer.Navigator
@@ -65,7 +98,7 @@ export default function RootNavigator() {
           sceneContainerStyle: { backgroundColor: theme.bg },
         }}
       >
-        {NAV_ITEMS.map((item) => (
+        {items.map((item) => (
           <Drawer.Screen key={item.name} name={item.name} component={item.component} options={{ title: item.label }} />
         ))}
       </Drawer.Navigator>
@@ -85,4 +118,10 @@ const styles = StyleSheet.create({
   itemActive: { backgroundColor: theme.colors.primary[50] },
   itemText: { fontSize: 14, color: theme.colors.dark[700] },
   itemTextActive: { color: theme.colors.primary[700], fontWeight: '700' },
+  footer: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.border, paddingHorizontal: 14, paddingTop: 10 },
+  userRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  avatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: theme.colors.primary[600], alignItems: 'center', justifyContent: 'center' },
+  avatarText: { color: '#fff', fontWeight: '700', fontSize: 12 },
+  userName: { fontSize: 13.5, fontWeight: '700', color: theme.text },
+  userSub: { fontSize: 11, color: theme.textFaint },
 });

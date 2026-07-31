@@ -3,7 +3,7 @@ import useApi from '@/hooks/useApi';
 import useDebounce from '@/hooks/useDebounce';
 import biService from '@/api/biService';
 import {
-  Screen, PageHeader, FilterBar, SearchInput, AsyncState, DataTable, Pager, Badge,
+  Screen, PageHeader, FilterBar, DateRangeFilter, SearchInput, AsyncState, DataTable, Pager, Badge,
 } from '@/components';
 import { formatCurrency, formatDateShort, formatNumber, statusTone } from '@/utils/format';
 import InvoiceLinesModal from '@/features/revenue/components/InvoiceLinesModal';
@@ -29,13 +29,15 @@ const columns = [
 export default function ClosedInvoicesScreen() {
   const [q, setQ] = useState('');
   const dq = useDebounce(q, 400);
+  const [range, setRange] = useState({ preset: 'all_time', from: '', to: '' });
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState(null);
-  useEffect(() => { setPage(1); }, [dq]);
+  const { from, to } = range;
+  useEffect(() => { setPage(1); }, [dq, from, to]);
 
   const { data, meta, page: pageInfo, loading, error, reload } = useApi(
-    () => biService.closedInvoices({ q: dq || undefined, page, pageSize: PAGE_SIZE }),
-    [dq, page],
+    () => biService.closedInvoices({ q: dq || undefined, from: from || undefined, to: to || undefined, page, pageSize: PAGE_SIZE }),
+    [dq, from, to, page],
   );
 
   const rows = data || [];
@@ -47,13 +49,14 @@ export default function ClosedInvoicesScreen() {
     <Screen loading={loading} onRefresh={reload}>
       <PageHeader title="Closed Invoices" subtitle={subtitle} />
       <FilterBar>
+        <DateRangeFilter value={range} onChange={setRange} />
         <SearchInput label="Search" value={q} onChangeText={setQ} placeholder="Invoice # / customer…" />
       </FilterBar>
 
       <AsyncState loading={loading} error={error} empty={!loading && !error && rows.length === 0} onRetry={reload}>
         {rows.length ? (
           <>
-            <DataTable title="Closed invoices" columns={columns} rows={rows} paginated={false} onRowClick={(r) => setSelected(r.invoiceNumber)} />
+            <DataTable title="Closed invoices" columns={columns} rows={rows} paginated={false} searchable={false} onRowClick={(r) => setSelected(r.invoiceNumber)} />
             <Pager page={page} totalPages={totalPages} total={total} loading={loading} onPrev={() => setPage((p) => Math.max(1, p - 1))} onNext={() => setPage((p) => Math.min(totalPages, p + 1))} />
           </>
         ) : null}
