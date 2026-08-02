@@ -49,7 +49,7 @@ export default function DrillModal({ title, subtitle, filter, range, onClose, de
   const showCustomers = !filter.customerId;
   const { data, loading, error, reload } = useApi(
     () => biService.revenueDrill({ ...filter, from, to }),
-    [filter.routeCode, filter.customerId, filter.category, from, to],
+    [filter.routeCode, filter.customerId, filter.category, filter.frequency, from, to],
   );
   const [tab, setTab] = useState(defaultTab || (showCustomers ? 'customers' : 'invoices'));
   const [drillCustomer, setDrillCustomer] = useState(null);

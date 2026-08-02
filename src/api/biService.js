@@ -33,6 +33,7 @@ const biService = {
   revenueByCustomer: (f) => get('/revenue/by-customer', f),
   revenueCustomerDetail: (id, f) => get(`/revenue/customer/${encodeURIComponent(id)}`, f),
   revenuePerStop: (f) => get('/revenue/per-stop', f),
+  itemFrequency: (f) => get('/items/frequency', f),
   customersOverview: (f) => get('/customer-overview', f),
 
   payrollCost: (f) => get('/payroll/cost', f),

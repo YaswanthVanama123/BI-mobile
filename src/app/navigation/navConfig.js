@@ -11,6 +11,7 @@ import RevenueByCategoryScreen from '@/features/revenue/screens/RevenueByCategor
 import RevenueByRouteScreen from '@/features/revenue/screens/RevenueByRouteScreen';
 import RevenueByCustomerScreen from '@/features/revenue/screens/RevenueByCustomerScreen';
 import RevenuePerStopScreen from '@/features/revenue/screens/RevenuePerStopScreen';
+import ItemFrequencyScreen from '@/features/revenue/screens/ItemFrequencyScreen';
 import PayrollCostScreen from '@/features/cost/screens/PayrollCostScreen';
 import LaborPerStopScreen from '@/features/cost/screens/LaborPerStopScreen';
 import RouteProfitabilityScreen from '@/features/cost/screens/RouteProfitabilityScreen';
@@ -48,6 +49,7 @@ export const NAV = [
       { name: 'RevenueByRoute', label: 'Revenue by Route', icon: 'git-branch-outline', component: RevenueByRouteScreen },
       { name: 'RevenueByCustomer', label: 'Revenue by Customer', icon: 'layers-outline', component: RevenueByCustomerScreen },
       { name: 'RevenuePerStop', label: 'Revenue per Stop', icon: 'cash-outline', component: RevenuePerStopScreen },
+      { name: 'ItemFrequency', label: 'Item Frequency', icon: 'pricetags-outline', component: ItemFrequencyScreen },
     ],
   },
   {
