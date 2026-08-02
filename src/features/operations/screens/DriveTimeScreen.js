@@ -1,5 +1,4 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
 import useApi from '@/hooks/useApi';
 import biService from '@/api/biService';
 import {
@@ -38,6 +37,13 @@ const summaryColumns = [
   { key: 'distanceMiles', header: 'Miles', align: 'right', width: 70, render: (r) => formatNumber(r.distanceMiles) },
 ];
 
+// All legs flattened into ONE table (Date + Route added, since rows are no longer grouped).
+const allLegColumns = [
+  { key: 'date', header: 'Date', width: 110, render: (r) => formatDateShort(r.date) },
+  { key: 'routeCode', header: 'Route', width: 80 },
+  ...legColumns,
+];
+
 export default function DriveTimeScreen() {
   const { range, setRange } = useFilters();
   const [routeCode, setRouteCode] = useState('all');
@@ -70,6 +76,12 @@ export default function DriveTimeScreen() {
       m.set(g.routeCode, a);
     }
     return [...m.values()].sort((a, b) => b.extra - a.extra);
+  }, [groups]);
+
+  const allLegs = useMemo(() => {
+    const rows = [];
+    for (const g of groups) for (const l of (g.legs || [])) rows.push({ ...l, routeCode: g.routeCode, date: g.date });
+    return rows;
   }, [groups]);
 
   return (
@@ -108,22 +120,8 @@ export default function DriveTimeScreen() {
 
               <DataTable title="Route / day summary" columns={summaryColumns} rows={groups} />
 
-              <SectionTitle>Leg detail</SectionTitle>
-              {groups.map((g) => (
-                <Card key={`${g.routeCode}|${g.date}`} padded={false} style={styles.groupCard}>
-                  <View style={styles.groupHead}>
-                    <Text style={styles.groupTitle}>Route {g.routeCode}</Text>
-                    <View style={styles.groupMeta}>
-                      <Text style={styles.metaText}>{formatDateShort(g.date)}</Text>
-                      <Text style={styles.metaText}>{formatNumber(g.legCount)} legs</Text>
-                      <Text style={styles.metaText}>driving {formatMinutes(g.drivingMinutes)}</Text>
-                      <Text style={styles.metaText}>extra {formatMinutes(g.extraTimeMinutes)}</Text>
-                      <Text style={styles.metaText}>{formatNumber(g.distanceMiles)} mi</Text>
-                    </View>
-                  </View>
-                  <DataTable columns={legColumns} rows={g.legs} maxRows={500} />
-                </Card>
-              ))}
+              <SectionTitle>Leg detail (all routes)</SectionTitle>
+              <DataTable title="Legs" columns={allLegColumns} rows={allLegs} maxRows={2000} />
             </>
           ) : null}
         </AsyncState>
@@ -131,11 +129,3 @@ export default function DriveTimeScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  groupCard: { marginBottom: 12, overflow: 'hidden' },
-  groupHead: { padding: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E7EB' },
-  groupTitle: { fontSize: 14, fontWeight: '700', color: '#1F2937', marginBottom: 6 },
-  groupMeta: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  metaText: { fontSize: 11.5, color: '#6B7280' },
-});

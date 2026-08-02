@@ -1,10 +1,10 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import useApi from '@/hooks/useApi';
 import biService from '@/api/biService';
 import {
   Screen, PageHeader, FilterBar, DateRangeFilter, RouteTabs, Select, AsyncState, DataTable,
-  StatGrid, StatCard, Badge, Card, SectionTitle, Muted,
+  StatGrid, StatCard, Badge, SectionTitle, Muted,
 } from '@/components';
 import { BarChartCard, PieChartCard } from '@/components';
 import { useFilters } from '@/context/FiltersContext';
@@ -56,12 +56,6 @@ export default function ServiceVsDriveTimeScreen() {
   const k = data && data.kpis;
   const byRouteDay = (data && data.byRouteDay) || [];
 
-  const dayGroups = useMemo(() => {
-    const m = new Map();
-    for (const r of byRouteDay) { if (!m.has(r.routeCode)) m.set(r.routeCode, []); m.get(r.routeCode).push(r); }
-    return [...m.entries()].map(([rc, rows]) => ({ routeCode: rc, rows })).sort((a, b) => a.routeCode.localeCompare(b.routeCode));
-  }, [byRouteDay]);
-
   const splitData = useMemo(() => (k ? [
     { name: 'Service', value: k.serviceMinutes },
     { name: 'Drive', value: k.driveMinutes },
@@ -102,26 +96,8 @@ export default function ServiceVsDriveTimeScreen() {
             <DataTable title="By route" columns={mkColumns('routeCode', 'Route')} rows={data.byRoute} maxRows={500} />
             <DataTable title="By technician" columns={mkColumns('technician', 'Technician')} rows={data.byTechnician} maxRows={500} />
 
-            <SectionTitle>Day by day (per route)</SectionTitle>
-            {dayGroups.map((g) => {
-              const svc = g.rows.reduce((t, r) => t + r.service, 0);
-              const drv = g.rows.reduce((t, r) => t + r.drive, 0);
-              const idl = g.rows.reduce((t, r) => t + r.idle, 0);
-              return (
-                <Card key={g.routeCode} padded={false} style={styles.groupCard}>
-                  <View style={styles.groupHead}>
-                    <Text style={styles.groupTitle}>Route {g.routeCode}</Text>
-                    <View style={styles.groupMeta}>
-                      <Text style={styles.metaText}>{formatNumber(g.rows.length)} day(s)</Text>
-                      <Text style={styles.metaText}>service {formatMinutes(svc)}</Text>
-                      <Text style={styles.metaText}>drive {formatMinutes(drv)}</Text>
-                      <Text style={styles.metaText}>idle {formatMinutes(idl)}</Text>
-                    </View>
-                  </View>
-                  <DataTable columns={dayColumns} rows={g.rows} maxRows={500} />
-                </Card>
-              );
-            })}
+            <SectionTitle>Day by day (all routes)</SectionTitle>
+            <DataTable title="Day by day" columns={dayColumns} rows={byRouteDay} maxRows={1000} />
           </>
         ) : null}
       </AsyncState>
@@ -131,9 +107,4 @@ export default function ServiceVsDriveTimeScreen() {
 
 const styles = StyleSheet.create({
   warn: { color: '#B45309', marginBottom: 8 },
-  groupCard: { marginBottom: 12, overflow: 'hidden' },
-  groupHead: { padding: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E7EB' },
-  groupTitle: { fontSize: 14, fontWeight: '700', color: '#1F2937', marginBottom: 6 },
-  groupMeta: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  metaText: { fontSize: 11.5, color: '#6B7280' },
 });

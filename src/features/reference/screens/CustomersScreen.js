@@ -158,8 +158,11 @@ export default function CustomersScreen() {
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState(null);
   const [job, setJob] = useState(null);
+  const [cdJob, setCdJob] = useState(null);
   const pollRef = useRef(null);
+  const cdPollRef = useRef(null);
   const running = !!(job && job.running);
+  const cdRunning = !!(cdJob && cdJob.running);
   const { from, to } = range;
   useEffect(() => { setPage(1); }, [dq, from, to]);
 
@@ -201,14 +204,48 @@ export default function CustomersScreen() {
     : job.phase === 'done' ? `Sync complete: ${formatNumber(job.stored || 0)} customers updated (${formatNumber(job.withAccount || 0)} with an account #).`
     : job.phase === 'error' ? `Sync failed: ${job.error || 'error'}` : null);
 
+  const fetchCdStatus = useCallback(async () => {
+    try { const res = await biService.customerCreatedDatesSyncStatus(); setCdJob((res && res.data) || null); return (res && res.data) || null; }
+    catch { return null; }
+  }, []);
+  useEffect(() => { fetchCdStatus(); }, [fetchCdStatus]);
+  useEffect(() => {
+    if (!cdRunning) return undefined;
+    cdPollRef.current = setInterval(async () => {
+      const j = await fetchCdStatus();
+      if (j && !j.running) { clearInterval(cdPollRef.current); reload(); }
+    }, 4000);
+    return () => clearInterval(cdPollRef.current);
+  }, [cdRunning, fetchCdStatus, reload]);
+
+  const onFetchCreated = async () => {
+    try {
+      const res = await biService.syncCustomerCreatedDates();
+      setCdJob((res && res.data && res.data.job) || { running: true, phase: 'fetching' });
+    } catch (e) {
+      setCdJob({ running: false, phase: 'error', error: (e && e.message) || 'could not start' });
+    }
+  };
+
+  const cdMsg = cdJob && (cdJob.phase === 'fetching'
+    ? `Fetching created dates in the background… ${formatNumber(cdJob.stored || 0)} stored / ${formatNumber(cdJob.scanned || 0)} scanned. You can leave this screen.`
+    : cdJob.phase === 'done' ? `Created dates fetched: ${formatNumber(cdJob.stored || 0)} customers updated.`
+    : cdJob.phase === 'error' ? `Created-date fetch failed: ${cdJob.error || 'error'}` : null);
+
   return (
     <Screen loading={loading} onRefresh={reload}>
       <PageHeader title="Customers" subtitle="Keyed on stable RouteStar IDs — never on display name. Tap a row for service address + pricing." />
 
-      <TouchableOpacity style={[styles.syncBtn, running && styles.syncBtnDisabled]} disabled={running} onPress={onSync} activeOpacity={0.7}>
-        {running ? <ActivityIndicator size="small" color="#fff" /> : null}
-        <Text style={styles.syncText}>{running ? 'Syncing…' : 'Sync account numbers'}</Text>
-      </TouchableOpacity>
+      <View style={styles.btnRow}>
+        <TouchableOpacity style={[styles.syncBtn, styles.syncBtnHalf, styles.syncBtnAlt, cdRunning && styles.syncBtnDisabled]} disabled={cdRunning} onPress={onFetchCreated} activeOpacity={0.7}>
+          {cdRunning ? <ActivityIndicator size="small" color={theme.colors.primary[600]} /> : null}
+          <Text style={styles.syncTextAlt}>{cdRunning ? 'Fetching…' : 'Fetch created dates'}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.syncBtn, styles.syncBtnHalf, running && styles.syncBtnDisabled]} disabled={running} onPress={onSync} activeOpacity={0.7}>
+          {running ? <ActivityIndicator size="small" color="#fff" /> : null}
+          <Text style={styles.syncText}>{running ? 'Syncing…' : 'Sync account numbers'}</Text>
+        </TouchableOpacity>
+      </View>
 
       <View style={{ marginBottom: 12, gap: 10 }}>
         <DateRangeFilter value={range} onChange={setRange} />
@@ -220,6 +257,14 @@ export default function CustomersScreen() {
           <View style={styles.msgRow}>
             {running ? <ActivityIndicator size="small" color={theme.colors.primary[600]} /> : null}
             <Text style={styles.msgText}>{msg}</Text>
+          </View>
+        </Card>
+      ) : null}
+      {cdMsg ? (
+        <Card style={{ marginBottom: 12 }}>
+          <View style={styles.msgRow}>
+            {cdRunning ? <ActivityIndicator size="small" color={theme.colors.primary[600]} /> : null}
+            <Text style={styles.msgText}>{cdMsg}</Text>
           </View>
         </Card>
       ) : null}
@@ -240,6 +285,10 @@ export default function CustomersScreen() {
 
 const styles = StyleSheet.create({
   syncBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: theme.colors.primary[600], borderRadius: 8, paddingVertical: 12, marginBottom: 12 },
+  btnRow: { flexDirection: 'row', gap: 8 },
+  syncBtnHalf: { flex: 1 },
+  syncBtnAlt: { backgroundColor: theme.card, borderWidth: StyleSheet.hairlineWidth, borderColor: theme.colors.primary[600] },
+  syncTextAlt: { color: theme.colors.primary[600], fontWeight: '700', fontSize: 13 },
   syncBtnDisabled: { opacity: 0.6 },
   syncText: { color: '#fff', fontWeight: '700', fontSize: 14 },
   msgRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
