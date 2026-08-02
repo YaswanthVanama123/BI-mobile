@@ -12,7 +12,7 @@ const PAGE_SIZE = 25;
 
 const columns = [
   { key: 'invoiceNumber', header: 'Invoice #', width: 110 },
-  { key: 'invoiceDate', header: 'Date', width: 100, render: (r) => formatDateShort(r.invoiceDate) },
+  { key: 'dateCompleted', header: 'Completed', width: 110, render: (r) => formatDateShort(r.dateCompleted) },
   { key: 'customer', header: 'Customer', width: 170 },
   { key: 'assignedTo', header: 'Technician', width: 140 },
   { key: 'invoiceType', header: 'Type', width: 110 },
@@ -23,7 +23,6 @@ const columns = [
   { key: 'lineItemCount', header: 'Lines', align: 'right', width: 70 },
   { key: 'subtotal', header: 'Subtotal', align: 'right', width: 100, render: (r) => formatCurrency(r.subtotal) },
   { key: 'total', header: 'Total', align: 'right', width: 100, render: (r) => formatCurrency(r.total) },
-  { key: 'dateCompleted', header: 'Completed', width: 110, render: (r) => formatDateShort(r.dateCompleted) },
 ];
 
 export default function ClosedInvoicesScreen() {
