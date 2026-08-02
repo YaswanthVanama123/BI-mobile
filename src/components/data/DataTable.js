@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Share, Alert, TextInput } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, TextInput } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import theme from '@/theme';
-import { rowsToCsv } from '@/utils/csv';
+import { exportTable } from '@/utils/exportData';
+import useExportFormat from '@/hooks/useExportFormat';
 
 const DEFAULT_W = 130;
 
@@ -27,6 +28,7 @@ export default function DataTable({
   const totalW = columns.reduce((t, c) => t + (c.width || DEFAULT_W), 0);
 
   const alignItemsFor = (a) => (a === 'right' ? 'flex-end' : a === 'center' ? 'center' : 'flex-start');
+  const exportFmt = useExportFormat();
 
   const cellContent = (col, row) => {
     if (col.render) return col.render(row);
@@ -37,8 +39,7 @@ export default function DataTable({
   const onExport = async () => {
     if (!total) return;
     try {
-      const csv = rowsToCsv(columns, data);
-      await Share.share({ title: exportName || title || 'Export', message: csv });
+      await exportTable(columns, data, exportName || title || 'export');
     } catch (e) {
       Alert.alert('Export failed', (e && e.message) || 'Could not export the table.');
     }
@@ -53,7 +54,7 @@ export default function DataTable({
           {total ? (
             <TouchableOpacity style={styles.exportBtn} onPress={onExport} activeOpacity={0.7} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
               <Ionicons name="share-outline" size={14} color={theme.colors.primary[600]} />
-              <Text style={styles.exportText}>Export</Text>
+              <Text style={styles.exportText}>{exportFmt === 'csv' ? 'CSV' : 'Excel'}</Text>
             </TouchableOpacity>
           ) : null}
         </View>

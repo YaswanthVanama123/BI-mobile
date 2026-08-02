@@ -23,7 +23,7 @@ const stopColumns = [
 ];
 
 const routeSummaryColumns = [
-  { key: 'date', header: 'Date', width: 110, render: (r) => formatDateShort(r.date) },
+  { key: 'date', header: 'Completed', width: 110, render: (r) => formatDateShort(r.date) },
   { key: 'route', header: 'Route', width: 80 },
   { key: 'stopCount', header: 'Stops', align: 'right', width: 70, render: (r) => formatNumber(r.stopCount) },
   { key: 'invoiceNumbers', header: 'Invoice #', width: 150, render: (r) => ((r.invoiceNumbers && r.invoiceNumbers.length) ? r.invoiceNumbers.join(', ') : '-') },

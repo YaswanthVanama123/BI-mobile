@@ -29,7 +29,7 @@ const mkColumns = (keyName, keyHeader) => [
 ];
 
 const dayColumns = [
-  { key: 'date', header: 'Date', width: 110, render: (r) => formatDateShort(r.date) },
+  { key: 'date', header: 'Completed', width: 110, render: (r) => formatDateShort(r.date) },
   { key: 'routeCode', header: 'Route', width: 80 },
   { key: 'stops', header: 'Stops', align: 'right', width: 70, render: (r) => formatNumber(r.stops) },
   { key: 'legs', header: 'Legs', align: 'right', width: 70, render: (r) => formatNumber(r.legs) },
