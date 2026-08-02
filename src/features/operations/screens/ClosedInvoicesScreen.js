@@ -3,7 +3,7 @@ import useApi from '@/hooks/useApi';
 import useDebounce from '@/hooks/useDebounce';
 import biService from '@/api/biService';
 import {
-  Screen, PageHeader, FilterBar, DateRangeFilter, SearchInput, AsyncState, DataTable, Pager, Badge,
+  Screen, PageHeader, FilterBar, DateRangeFilter, SearchInput, RouteTabs, AsyncState, DataTable, Pager, Badge,
 } from '@/components';
 import { formatCurrency, formatDateShort, formatNumber, statusTone } from '@/utils/format';
 import InvoiceLinesModal from '@/features/revenue/components/InvoiceLinesModal';
@@ -29,14 +29,18 @@ export default function ClosedInvoicesScreen() {
   const [q, setQ] = useState('');
   const dq = useDebounce(q, 400);
   const [range, setRange] = useState({ preset: 'all_time', from: '', to: '' });
+  const [route, setRoute] = useState('all');
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState(null);
   const { from, to } = range;
-  useEffect(() => { setPage(1); }, [dq, from, to]);
+  useEffect(() => { setPage(1); }, [dq, from, to, route]);
+
+  const opts = useApi(() => biService.checkinOptions(), []);
+  const routes = (opts.data && opts.data.routes) || [];
 
   const { data, meta, page: pageInfo, loading, error, reload } = useApi(
-    () => biService.closedInvoices({ q: dq || undefined, from: from || undefined, to: to || undefined, page, pageSize: PAGE_SIZE }),
-    [dq, from, to, page],
+    () => biService.closedInvoices({ q: dq || undefined, from: from || undefined, to: to || undefined, routeCode: route !== 'all' ? route : undefined, page, pageSize: PAGE_SIZE }),
+    [dq, from, to, route, page],
   );
 
   const rows = data || [];
@@ -51,6 +55,7 @@ export default function ClosedInvoicesScreen() {
         <DateRangeFilter value={range} onChange={setRange} />
         <SearchInput label="Search" value={q} onChangeText={setQ} placeholder="Invoice # / customer…" />
       </FilterBar>
+      <RouteTabs routes={routes} value={route} onChange={setRoute} allLabel="All" />
 
       <AsyncState loading={loading} error={error} empty={!loading && !error && rows.length === 0} onRetry={reload}>
         {rows.length ? (
