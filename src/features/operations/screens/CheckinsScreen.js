@@ -9,6 +9,7 @@ import {
 import { BarChartCard, PieChartCard } from '@/components';
 import { useFilters } from '@/context/FiltersContext';
 import { formatMinutes, formatNumber, formatPercent, formatDateShort, statusTone } from '@/utils/format';
+import InvoiceLinesModal from '@/features/revenue/components/InvoiceLinesModal';
 
 const stopColumns = [
   { key: 'seq', header: '#', align: 'right', width: 50, accessor: (r) => r.__seq },
@@ -41,6 +42,7 @@ const routeSummaryColumns = [
 export default function CheckinsScreen() {
   const { range, setRange } = useFilters();
   const [route, setRoute] = useState('all');
+  const [invoice, setInvoice] = useState(null);
   const { from, to } = range;
 
   const opts = useApi(() => biService.checkinOptions(), []);
@@ -139,7 +141,7 @@ export default function CheckinsScreen() {
                         <Text style={styles.metaText}>{g.firstCheckIn || '-'} → {g.lastCheckOut || '-'}</Text>
                       </View>
                     </View>
-                    <DataTable columns={stopColumns} rows={g.stops.map((s, i) => ({ ...s, __seq: i + 1 }))} maxRows={200} />
+                    <DataTable columns={stopColumns} rows={g.stops.map((s, i) => ({ ...s, __seq: i + 1 }))} maxRows={200} onRowClick={(r) => r.invoiceNumber && setInvoice(r.invoiceNumber)} />
                   </Card>
                 ))}
                 {groups.length > detailGroups.length ? (
@@ -150,6 +152,7 @@ export default function CheckinsScreen() {
           </>
         ) : null}
       </AsyncState>
+      {invoice ? <InvoiceLinesModal invoiceNumber={invoice} onClose={() => setInvoice(null)} /> : null}
     </Screen>
   );
 }

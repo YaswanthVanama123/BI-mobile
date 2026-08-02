@@ -25,9 +25,17 @@ export default function InvoiceLinesModal({ invoiceNumber, onClose }) {
         {data ? (
           <>
             <StatGrid columns={2}>
-              <StatCard label="Technician" value={data.assignedTo || '—'} tone="info" />
+              <StatCard label="Customer" value={data.customer || '—'} tone="info" />
+              <StatCard label="Technician" value={data.assignedTo || '—'} />
+              <StatCard label="Status" value={data.status || '—'} />
+              <StatCard label="Type" value={data.invoiceType || '—'} />
+              <StatCard label="Invoice date" value={data.invoiceDate ? formatDateShort(data.invoiceDate) : '—'} />
               <StatCard label="Completed" value={data.dateCompleted ? formatDateShort(data.dateCompleted) : '—'} />
+              <StatCard label="Arrival" value={data.arrivalTime || '—'} />
+              <StatCard label="Departure" value={data.departureTime || '—'} />
+              <StatCard label="Elapsed" value={data.elapsedTime || '—'} />
               <StatCard label="Subtotal" value={formatCurrency(data.subtotal)} />
+              <StatCard label="Tax" value={formatCurrency(data.tax)} />
               <StatCard label="Total" value={formatCurrency(data.total)} tone="success" />
             </StatGrid>
             <DataTable title={`Line items (${(data.lineItems || []).length})`} columns={lineColumns} rows={data.lineItems || []} />
