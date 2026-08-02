@@ -16,8 +16,8 @@ const stopColumns = [
   { key: 'customer', header: 'Customer', width: 170 },
   { key: 'checkIn', header: 'Check-in', width: 90, render: (r) => r.checkIn || '-' },
   { key: 'checkOut', header: 'Check-out', width: 90, render: (r) => r.checkOut || '-' },
-  { key: 'serviceMinutes', header: 'Service', align: 'right', width: 80, render: (r) => (r.serviceMinutes != null ? formatMinutes(r.serviceMinutes) : '-') },
-  { key: 'gapToNextMinutes', header: 'Idle to next', align: 'right', width: 90, render: (r) => (r.gapToNextMinutes != null ? formatMinutes(r.gapToNextMinutes) : '-') },
+  { key: 'serviceMinutes', header: 'Service', align: 'right', width: 80, render: (r) => (r.serviceMinutes != null ? formatMinutes(r.serviceMinutes) : '-'), csv: (r) => formatMinutes(r.serviceMinutes) },
+  { key: 'gapToNextMinutes', header: 'Idle to next', align: 'right', width: 90, render: (r) => (r.gapToNextMinutes != null ? formatMinutes(r.gapToNextMinutes) : '-'), csv: (r) => formatMinutes(r.gapToNextMinutes) },
   { key: 'elapsedStatus', header: 'Check', width: 110, render: (r) => <Badge tone={statusTone(r.elapsedStatus)}>{r.elapsedStatus}</Badge> },
 ];
 
@@ -28,9 +28,9 @@ const routeSummaryColumns = [
   { key: 'invoiceNumbers', header: 'Invoice #', width: 150, render: (r) => ((r.invoiceNumbers && r.invoiceNumbers.length) ? r.invoiceNumbers.join(', ') : '-') },
   { key: 'firstCheckIn', header: 'First in', width: 90, render: (r) => r.firstCheckIn || '-' },
   { key: 'lastCheckOut', header: 'Last out', width: 90, render: (r) => r.lastCheckOut || '-' },
-  { key: 'spanMinutes', header: 'Day span', align: 'right', width: 90, render: (r) => (r.spanMinutes != null ? formatMinutes(r.spanMinutes) : '-') },
-  { key: 'totalServiceMinutes', header: 'Service', align: 'right', width: 80, render: (r) => formatMinutes(r.totalServiceMinutes) },
-  { key: 'totalGapMinutes', header: 'Idle', align: 'right', width: 80, render: (r) => formatMinutes(r.totalGapMinutes || 0) },
+  { key: 'spanMinutes', header: 'Day span', align: 'right', width: 90, render: (r) => (r.spanMinutes != null ? formatMinutes(r.spanMinutes) : '-'), csv: (r) => formatMinutes(r.spanMinutes) },
+  { key: 'totalServiceMinutes', header: 'Service', align: 'right', width: 80, render: (r) => formatMinutes(r.totalServiceMinutes), csv: (r) => formatMinutes(r.totalServiceMinutes) },
+  { key: 'totalGapMinutes', header: 'Idle', align: 'right', width: 80, render: (r) => formatMinutes(r.totalGapMinutes || 0), csv: (r) => formatMinutes(r.totalGapMinutes || 0) },
   {
     key: 'servicePct', header: 'Service % of day', align: 'right', width: 120,
     render: (r) => (r.servicePct != null ? <Badge tone={r.servicePct >= 60 ? 'success' : 'warning'}>{formatPercent(r.servicePct)}</Badge> : '-'),

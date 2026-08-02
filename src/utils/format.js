@@ -33,9 +33,12 @@ export function formatPercent(value, digits = 1) {
 export function formatMinutes(value) {
   const n = toNumber(value);
   if (n === null) return '-';
-  const h = Math.floor(n / 60);
-  const m = Math.round(n % 60);
-  return h > 0 ? `${h}h ${m}m` : `${m}m`;
+  const total = Math.max(0, Math.round(n));
+  const h = Math.floor(total / 60);
+  const m = total % 60;
+  if (h > 0 && m > 0) return `${h}hr ${m} min`;
+  if (h > 0) return `${h}hr`;
+  return `${m} min`;
 }
 
 export function formatDateShort(value) {

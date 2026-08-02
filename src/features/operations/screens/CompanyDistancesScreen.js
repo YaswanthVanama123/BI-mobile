@@ -16,7 +16,7 @@ const columns = [
   { key: 'fromCompany', header: 'From company', width: 170 },
   { key: 'toCompany', header: 'To company', width: 170 },
   { key: 'distanceMiles', header: 'Distance (mi)', align: 'right', width: 110, render: (r) => (r.distanceMiles != null ? formatNumber(r.distanceMiles) : '—') },
-  { key: 'drivingMinutes', header: 'Driving time', align: 'right', width: 110, render: (r) => (r.drivingMinutes != null ? formatMinutes(r.drivingMinutes) : 'null') },
+  { key: 'drivingMinutes', header: 'Driving time', align: 'right', width: 110, render: (r) => (r.drivingMinutes != null ? formatMinutes(r.drivingMinutes) : 'null'), csv: (r) => formatMinutes(r.drivingMinutes) },
   { key: 'status', header: 'Status', width: 130, render: (r) => <Badge tone={statusTone(r.status)}>{r.status}</Badge> },
   { key: 'syncedAt', header: 'Synced', width: 120, render: (r) => (r.syncedAt ? formatDateShort(r.syncedAt) : '—') },
 ];

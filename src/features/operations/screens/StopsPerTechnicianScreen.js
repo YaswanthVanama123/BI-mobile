@@ -14,8 +14,8 @@ const columns = [
   { key: 'stops', header: 'Total stops', align: 'right', width: 100, render: (r) => formatNumber(r.stops) },
   { key: 'activeDays', header: 'Active days', align: 'right', width: 100, render: (r) => formatNumber(r.activeDays) },
   { key: 'avgStopsPerDay', header: 'Avg / day', align: 'right', width: 90, render: (r) => formatNumber(r.avgStopsPerDay) },
-  { key: 'serviceMinutes', header: 'Service time', align: 'right', width: 100, render: (r) => formatMinutes(r.serviceMinutes) },
-  { key: 'avgServicePerStop', header: 'Svc / stop', align: 'right', width: 100, render: (r) => formatMinutes(r.avgServicePerStop) },
+  { key: 'serviceMinutes', header: 'Service time', align: 'right', width: 100, render: (r) => formatMinutes(r.serviceMinutes), csv: (r) => formatMinutes(r.serviceMinutes) },
+  { key: 'avgServicePerStop', header: 'Svc / stop', align: 'right', width: 100, render: (r) => formatMinutes(r.avgServicePerStop), csv: (r) => formatMinutes(r.avgServicePerStop) },
 ];
 
 export default function StopsPerTechnicianScreen() {

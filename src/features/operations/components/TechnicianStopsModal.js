@@ -7,7 +7,7 @@ import InvoiceLinesModal from '@/features/revenue/components/InvoiceLinesModal';
 
 const stopColumns = [
   { key: 'invoiceNumber', header: 'Invoice #', width: 110 },
-  { key: 'invoiceDate', header: 'Date', width: 100, render: (r) => formatDateShort(r.invoiceDate) },
+  { key: 'dateCompleted', header: 'Completed', width: 100, render: (r) => formatDateShort(r.dateCompleted) },
   { key: 'customer', header: 'Customer', width: 170 },
   { key: 'status', header: 'Status', width: 120, render: (r) => (r.status ? <Badge tone={statusTone(r.status)}>{r.status}</Badge> : '-') },
   { key: 'arrivalTime', header: 'Arrival', width: 90, render: (r) => r.arrivalTime || '-' },

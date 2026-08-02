@@ -16,12 +16,13 @@ const legColumns = [
   { key: 'toCustomer', header: 'To customer', width: 160 },
   { key: 'fromDeparture', header: 'Departure', width: 90, render: (r) => r.fromDeparture || '-' },
   { key: 'toArrival', header: 'Next arrival', width: 90, render: (r) => r.toArrival || '-' },
-  { key: 'observedGapMinutes', header: 'Observed gap', align: 'right', width: 100, render: (r) => (r.observedGapMinutes != null ? formatMinutes(r.observedGapMinutes) : '-') },
-  { key: 'drivingMinutes', header: 'Driving', align: 'right', width: 80, render: (r) => (r.drivingMinutes != null ? formatMinutes(r.drivingMinutes) : '-') },
+  { key: 'observedGapMinutes', header: 'Observed gap', align: 'right', width: 100, render: (r) => (r.observedGapMinutes != null ? formatMinutes(r.observedGapMinutes) : '-'), csv: (r) => formatMinutes(r.observedGapMinutes) },
+  { key: 'drivingMinutes', header: 'Driving', align: 'right', width: 80, render: (r) => (r.drivingMinutes != null ? formatMinutes(r.drivingMinutes) : '-'), csv: (r) => formatMinutes(r.drivingMinutes) },
   { key: 'distanceMiles', header: 'Miles', align: 'right', width: 70, render: (r) => (r.distanceMiles != null ? formatNumber(r.distanceMiles) : '-') },
   {
     key: 'extraTimeMinutes', header: 'Extra (idle)', align: 'right', width: 100,
     render: (r) => (r.extraTimeMinutes != null ? <Badge tone={r.extraTimeMinutes > 15 ? 'warning' : 'neutral'}>{formatMinutes(r.extraTimeMinutes)}</Badge> : '-'),
+    csv: (r) => formatMinutes(r.extraTimeMinutes),
   },
   { key: 'status', header: 'Status', width: 110, render: (r) => <Badge tone={statusTone(r.status)}>{r.status}</Badge> },
 ];
@@ -31,13 +32,12 @@ const summaryColumns = [
   { key: 'routeCode', header: 'Route', width: 80 },
   { key: 'legCount', header: 'Legs', align: 'right', width: 70, render: (r) => formatNumber(r.legCount) },
   { key: 'invoiceNumbers', header: 'Invoice #', width: 150, render: (r) => ((r.invoiceNumbers && r.invoiceNumbers.length) ? r.invoiceNumbers.join(', ') : '-') },
-  { key: 'drivingMinutes', header: 'Driving', align: 'right', width: 80, render: (r) => formatMinutes(r.drivingMinutes) },
-  { key: 'observedGapMinutes', header: 'Observed gap', align: 'right', width: 100, render: (r) => formatMinutes(r.observedGapMinutes) },
-  { key: 'extraTimeMinutes', header: 'Extra (idle)', align: 'right', width: 100, render: (r) => <Badge tone={toNumber(r.extraTimeMinutes) > 60 ? 'warning' : 'neutral'}>{formatMinutes(r.extraTimeMinutes)}</Badge> },
+  { key: 'drivingMinutes', header: 'Driving', align: 'right', width: 80, render: (r) => formatMinutes(r.drivingMinutes), csv: (r) => formatMinutes(r.drivingMinutes) },
+  { key: 'observedGapMinutes', header: 'Observed gap', align: 'right', width: 100, render: (r) => formatMinutes(r.observedGapMinutes), csv: (r) => formatMinutes(r.observedGapMinutes) },
+  { key: 'extraTimeMinutes', header: 'Extra (idle)', align: 'right', width: 100, render: (r) => <Badge tone={toNumber(r.extraTimeMinutes) > 60 ? 'warning' : 'neutral'}>{formatMinutes(r.extraTimeMinutes)}</Badge>, csv: (r) => formatMinutes(r.extraTimeMinutes) },
   { key: 'distanceMiles', header: 'Miles', align: 'right', width: 70, render: (r) => formatNumber(r.distanceMiles) },
 ];
 
-// All legs flattened into ONE table (Date + Route added, since rows are no longer grouped).
 const allLegColumns = [
   { key: 'date', header: 'Date', width: 110, render: (r) => formatDateShort(r.date) },
   { key: 'routeCode', header: 'Route', width: 80 },
