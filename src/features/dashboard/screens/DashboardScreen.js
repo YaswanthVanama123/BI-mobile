@@ -56,7 +56,7 @@ export default function DashboardScreen() {
             <LineChartCard title="Stop volume by month" data={(volume.data && volume.data.series) || []} xKey="bucket" lines={[{ key: 'stops', label: 'Stops', color: '#2563EB' }]} />
             <PieChartCard title="Revenue by category" subtitle="top 8" data={catPie} nameKey="name" valueKey="value" />
             <BarChartCard title="Revenue by route" data={(route.data && route.data.rows) || []} xKey="routeCode" bars={[{ key: 'invoiced', label: 'Invoiced', color: '#2563EB' }]} />
-            <PieChartCard title="Where the day goes" subtitle="service vs drive vs idle" data={splitPie} nameKey="name" valueKey="value" />
+            <PieChartCard title="Where the day goes" subtitle="service vs drive vs idle" data={splitPie} nameKey="name" valueKey="value" valueFormatter={formatMinutes} />
             <BarChartCard title="Technician utilization (%)" data={utilBars} xKey="technician" bars={[{ key: 'utilizationPct', label: 'Utilization %', color: '#10B981' }]} />
           </>
         ) : null}

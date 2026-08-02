@@ -35,7 +35,11 @@ function Frame({ title, subtitle, legend, children }) {
   );
 }
 
-export function BarChartCard({ title, subtitle, data = [], xKey, bars = [], maxBars = 12, height = 200 }) {
+export function BarChartCard({ title, subtitle, data = [], xKey, bars = [], maxBars = 12, height = 200, valueFormatter }) {
+  const fmt = valueFormatter || ((v) => String(v));
+  const tipText = (item) => (item && Array.isArray(item.stacks)
+    ? fmt(item.stacks.reduce((t, s) => t + (s.value || 0), 0))
+    : fmt(item ? item.value : 0));
   const rows = data.slice(0, maxBars);
   const stacked = bars.length > 1;
   const n = Math.max(rows.length, 1);
@@ -78,13 +82,18 @@ export function BarChartCard({ title, subtitle, data = [], xKey, bars = [], maxB
           yAxisTextStyle={axisText}
           isAnimated
           disableScroll
+          focusBarOnPress
+          renderTooltip={(item) => (
+            <View style={styles.tip}><Text style={styles.tipText}>{tipText(item)}</Text></View>
+          )}
         />
       )}
     </Frame>
   );
 }
 
-export function LineChartCard({ title, subtitle, data = [], xKey, lines = [], height = 210 }) {
+export function LineChartCard({ title, subtitle, data = [], xKey, lines = [], height = 210, valueFormatter }) {
+  const fmt = valueFormatter || ((v) => String(v));
   const rows = data;
   const n = Math.max(rows.length, 1);
   const spacing = Math.max(28, Math.min(70, (CHART_W - 40) / n));
@@ -118,6 +127,16 @@ export function LineChartCard({ title, subtitle, data = [], xKey, lines = [], he
             rulesColor={theme.colors.dark[100]}
             xAxisLabelTextStyle={axisText}
             yAxisTextStyle={axisText}
+            pointerConfig={{
+              pointerColor: theme.colors.dark[400],
+              radius: 4,
+              pointerLabelWidth: 100,
+              pointerLabelHeight: 30,
+              activatePointersOnLongPress: false,
+              pointerLabelComponent: (items) => (
+                <View style={styles.tip}><Text style={styles.tipText}>{fmt(items && items[0] ? items[0].value : 0)}</Text></View>
+              ),
+            }}
             isAnimated
           />
         </ScrollView>
@@ -126,7 +145,7 @@ export function LineChartCard({ title, subtitle, data = [], xKey, lines = [], he
   );
 }
 
-export function PieChartCard({ title, subtitle, data = [], nameKey = 'name', valueKey = 'value', donut = true }) {
+export function PieChartCard({ title, subtitle, data = [], nameKey = 'name', valueKey = 'value', donut = true, valueFormatter }) {
   const rows = data.filter((d) => Number(d[valueKey]) > 0);
   const pieData = rows.map((d, i) => ({ value: Number(d[valueKey]) || 0, color: CHART_COLORS[i % CHART_COLORS.length], text: '' }));
   const total = pieData.reduce((t, d) => t + d.value, 0);
@@ -156,7 +175,7 @@ export function PieChartCard({ title, subtitle, data = [], nameKey = 'name', val
               return (
                 <View key={i} style={styles.legendItem}>
                   <View style={[styles.dot, { backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }]} />
-                  <Text style={styles.legendText} numberOfLines={1}>{shorten(d[nameKey], 16)} · {pct}%</Text>
+                  <Text style={styles.legendText} numberOfLines={1}>{shorten(d[nameKey], 16)} · {valueFormatter ? `${valueFormatter(Number(d[valueKey]) || 0)} · ` : ''}{pct}%</Text>
                 </View>
               );
             })}
@@ -189,6 +208,8 @@ const styles = StyleSheet.create({
   centerLbl: { fontSize: 10, color: theme.textFaint },
   empty: { height: 160, alignItems: 'center', justifyContent: 'center' },
   emptyText: { color: theme.textFaint, fontSize: 13 },
+  tip: { backgroundColor: theme.colors.dark[800], paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  tipText: { color: '#fff', fontSize: 11.5, fontWeight: '700' },
 });
 
 export default { BarChartCard, LineChartCard, PieChartCard };

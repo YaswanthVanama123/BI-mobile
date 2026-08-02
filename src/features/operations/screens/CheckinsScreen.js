@@ -115,9 +115,9 @@ export default function CheckinsScreen() {
               <StatCard label="Service % of day" value={formatPercent(kpi.servicePct)} tone={kpi.servicePct >= 60 ? 'success' : 'warning'} />
             </StatGrid>
 
-            <BarChartCard title="Day span per route (min)" subtitle="total first-in → last-out over range" data={perRoute} xKey="route" bars={[{ key: 'span', label: 'Day span (min)', color: '#2563EB' }]} />
+            <BarChartCard title="Day span per route (min)" subtitle="total first-in → last-out over range" data={perRoute} xKey="route" bars={[{ key: 'span', label: 'Day span (min)', color: '#2563EB' }]} valueFormatter={formatMinutes} />
             <BarChartCard title="Time on-site vs idle between stops (min)" subtitle="over range" data={perRoute} xKey="route"
-              bars={[{ key: 'service', label: 'Service (min)', color: '#10B981' }, { key: 'gap', label: 'Idle (min)', color: '#F59E0B' }]} />
+              bars={[{ key: 'service', label: 'Service (min)', color: '#10B981' }, { key: 'gap', label: 'Idle (min)', color: '#F59E0B' }]} valueFormatter={formatMinutes} />
 
             <PieChartCard title="Elapsed-time check" subtitle="source vs computed" data={statusData} nameKey="name" valueKey="value" />
 

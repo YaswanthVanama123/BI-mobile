@@ -114,9 +114,9 @@ export default function DriveTimeScreen() {
                 <StatCard label="Distance" value={`${formatNumber(kpi.distance)} mi`} />
               </StatGrid>
 
-              <BarChartCard title="Extra (idle) time by route" subtitle="gap beyond driving, over range" data={perRoute} xKey="routeCode" bars={[{ key: 'extra', label: 'Extra (min)', color: '#F59E0B' }]} />
+              <BarChartCard title="Extra (idle) time by route" subtitle="gap beyond driving, over range" data={perRoute} xKey="routeCode" bars={[{ key: 'extra', label: 'Extra (min)', color: '#F59E0B' }]} valueFormatter={formatMinutes} />
               <BarChartCard title="Driving vs extra by route (min)" data={perRoute} xKey="routeCode"
-                bars={[{ key: 'driving', label: 'Driving (min)', color: '#2563EB' }, { key: 'extra', label: 'Extra (min)', color: '#F59E0B' }]} />
+                bars={[{ key: 'driving', label: 'Driving (min)', color: '#2563EB' }, { key: 'extra', label: 'Extra (min)', color: '#F59E0B' }]} valueFormatter={formatMinutes} />
 
               <DataTable title="Route / day summary" columns={summaryColumns} rows={groups} />
 

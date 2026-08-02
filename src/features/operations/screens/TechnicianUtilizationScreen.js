@@ -61,6 +61,7 @@ export default function TechnicianUtilizationScreen() {
               data={chart}
               xKey="technician"
               bars={[{ key: 'service', label: 'Service', color: '#10B981' }, { key: 'idle', label: 'Idle', color: '#F59E0B' }]}
+              valueFormatter={formatMinutes}
             />
             <DataTable title="Utilization by technician" columns={columns} rows={rows} />
           </>

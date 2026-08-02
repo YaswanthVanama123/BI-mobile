@@ -89,9 +89,9 @@ export default function ServiceVsDriveTimeScreen() {
               <StatCard label="Avg drive / leg" value={formatMinutes(k.avgDrivePerLeg)} sublabel={`${formatNumber(k.distanceMiles)} mi`} />
             </StatGrid>
 
-            <PieChartCard title="Where the day goes" subtitle="service vs drive vs idle" data={splitData} nameKey="name" valueKey="value" />
-            <BarChartCard title={`Service vs drive vs idle by ${granularity}`} data={data.series} xKey="bucket" bars={splitBars} />
-            <BarChartCard title="By route (minutes)" data={data.byRoute} xKey="routeCode" bars={splitBars} />
+            <PieChartCard title="Where the day goes" subtitle="service vs drive vs idle" data={splitData} nameKey="name" valueKey="value" valueFormatter={formatMinutes} />
+            <BarChartCard title={`Service vs drive vs idle by ${granularity}`} data={data.series} xKey="bucket" bars={splitBars} valueFormatter={formatMinutes} />
+            <BarChartCard title="By route (minutes)" data={data.byRoute} xKey="routeCode" bars={splitBars} valueFormatter={formatMinutes} />
 
             <DataTable title="By route" columns={mkColumns('routeCode', 'Route')} rows={data.byRoute} maxRows={500} />
             <DataTable title="By technician" columns={mkColumns('technician', 'Technician')} rows={data.byTechnician} maxRows={500} />
