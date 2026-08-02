@@ -43,7 +43,13 @@ export function formatMinutes(value) {
 
 export function formatDateShort(value) {
   if (!value) return '-';
-  const d = value instanceof Date ? value : new Date(value);
+  let d;
+  if (typeof value === 'string') {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+    d = m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : new Date(value);
+  } else {
+    d = value instanceof Date ? value : new Date(value);
+  }
   if (Number.isNaN(d.getTime())) return '-';
   return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
