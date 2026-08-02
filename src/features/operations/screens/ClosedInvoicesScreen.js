@@ -20,7 +20,7 @@ const columns = [
   { key: 'arrivalTime', header: 'Arrival', width: 90 },
   { key: 'departureTime', header: 'Departure', width: 90 },
   { key: 'elapsedTime', header: 'Elapsed', width: 90 },
-  { key: 'lineItemCount', header: 'Lines', align: 'right', width: 70 },
+  { key: 'lineItemCount', header: 'Items', align: 'right', width: 70 },
   { key: 'subtotal', header: 'Subtotal', align: 'right', width: 100, render: (r) => formatCurrency(r.subtotal) },
   { key: 'total', header: 'Total', align: 'right', width: 100, render: (r) => formatCurrency(r.total) },
 ];

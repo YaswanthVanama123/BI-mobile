@@ -33,7 +33,9 @@ const pricingColumns = [
 const invoiceColumns = [
   { key: 'invoiceNumber', header: 'Invoice #', width: 110 },
   { key: 'date', header: 'Completed', width: 100 },
-  { key: 'lineCount', header: 'Lines', align: 'right', width: 60, render: (r) => formatNumber(r.lineCount) },
+  { key: 'checkIn', header: 'Check-in', width: 100, render: (r) => r.checkIn || '-' },
+  { key: 'checkOut', header: 'Check-out', width: 100, render: (r) => r.checkOut || '-' },
+  { key: 'lineCount', header: 'Items', align: 'right', width: 60, render: (r) => formatNumber(r.lineCount) },
   { key: 'total', header: 'Total', align: 'right', width: 100, render: (r) => formatCurrency(r.total) },
 ];
 const itemColumns = [

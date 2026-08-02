@@ -38,7 +38,7 @@ export default function InvoiceLinesModal({ invoiceNumber, onClose }) {
               <StatCard label="Tax" value={formatCurrency(data.tax)} />
               <StatCard label="Total" value={formatCurrency(data.total)} tone="success" />
             </StatGrid>
-            <DataTable title={`Line items (${(data.lineItems || []).length})`} columns={lineColumns} rows={data.lineItems || []} />
+            <DataTable title={`Items (${(data.lineItems || []).length})`} columns={lineColumns} rows={data.lineItems || []} />
           </>
         ) : null}
       </AsyncState>

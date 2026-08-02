@@ -12,7 +12,7 @@ const stopColumns = [
   { key: 'status', header: 'Status', width: 120, render: (r) => (r.status ? <Badge tone={statusTone(r.status)}>{r.status}</Badge> : '-') },
   { key: 'arrivalTime', header: 'Arrival', width: 90, render: (r) => r.arrivalTime || '-' },
   { key: 'departureTime', header: 'Departure', width: 90, render: (r) => r.departureTime || '-' },
-  { key: 'lineItemCount', header: 'Lines', align: 'right', width: 60, render: (r) => formatNumber(r.lineItemCount) },
+  { key: 'lineItemCount', header: 'Items', align: 'right', width: 60, render: (r) => formatNumber(r.lineItemCount) },
   { key: 'total', header: 'Total', align: 'right', width: 100, render: (r) => formatCurrency(r.total) },
 ];
 

@@ -8,6 +8,7 @@ import {
 import { BarChartCard } from '@/components';
 import { useFilters } from '@/context/FiltersContext';
 import { formatMinutes, formatNumber, formatDateShort, statusTone, toNumber } from '@/utils/format';
+import DrillModal from '@/features/revenue/components/DrillModal';
 
 const legColumns = [
   { key: 'fromInvoiceNumber', header: 'From #', width: 100 },
@@ -47,6 +48,7 @@ const allLegColumns = [
 export default function DriveTimeScreen() {
   const { range, setRange } = useFilters();
   const [routeCode, setRouteCode] = useState('all');
+  const [drill, setDrill] = useState(null);
   const { from, to } = range;
 
   const opts = useApi(() => biService.driveTimeOptions(), []);
@@ -118,13 +120,23 @@ export default function DriveTimeScreen() {
               <BarChartCard title="Driving vs extra by route (min)" data={perRoute} xKey="routeCode"
                 bars={[{ key: 'driving', label: 'Driving (min)', color: '#2563EB' }, { key: 'extra', label: 'Extra (min)', color: '#F59E0B' }]} valueFormatter={formatMinutes} />
 
-              <DataTable title="Route / day summary" columns={summaryColumns} rows={groups} />
+              <DataTable title="Route / day summary" columns={summaryColumns} rows={groups} onRowClick={(r) => setDrill(r)} />
 
               <SectionTitle>Leg detail (all routes)</SectionTitle>
               <DataTable title="Legs" columns={allLegColumns} rows={allLegs} maxRows={2000} />
             </>
           ) : null}
         </AsyncState>
+      ) : null}
+      {drill ? (
+        <DrillModal
+          title={`${drill.routeCode} · ${formatDateShort(drill.date)}`}
+          subtitle="Invoices completed by this route on the selected day"
+          filter={{ routeCode: drill.routeCode }}
+          range={{ from: drill.date, to: drill.date }}
+          defaultTab="invoices"
+          onClose={() => setDrill(null)}
+        />
       ) : null}
     </Screen>
   );
