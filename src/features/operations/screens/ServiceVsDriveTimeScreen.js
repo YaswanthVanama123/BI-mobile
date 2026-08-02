@@ -9,6 +9,7 @@ import {
 import { BarChartCard, PieChartCard } from '@/components';
 import { useFilters } from '@/context/FiltersContext';
 import { formatMinutes, formatNumber, formatPercent, formatDateShort } from '@/utils/format';
+import DrillModal from '@/features/revenue/components/DrillModal';
 
 const GRANULARITIES = ['day', 'week', 'month'];
 
@@ -44,6 +45,7 @@ export default function ServiceVsDriveTimeScreen() {
   const { range, setRange } = useFilters();
   const [routeCode, setRouteCode] = useState('all');
   const [granularity, setGranularity] = useState('month');
+  const [drill, setDrill] = useState(null);
   const { from, to } = range;
 
   const opts = useApi(() => biService.driveTimeOptions(), []);
@@ -97,10 +99,20 @@ export default function ServiceVsDriveTimeScreen() {
             <DataTable title="By technician" columns={mkColumns('technician', 'Technician')} rows={data.byTechnician} maxRows={500} />
 
             <SectionTitle>Day by day (all routes)</SectionTitle>
-            <DataTable title="Day by day" columns={dayColumns} rows={byRouteDay} maxRows={1000} />
+            <DataTable title="Day by day" columns={dayColumns} rows={byRouteDay} maxRows={1000} onRowClick={(r) => setDrill(r)} />
           </>
         ) : null}
       </AsyncState>
+      {drill ? (
+        <DrillModal
+          title={`${drill.routeCode} · ${formatDateShort(drill.date)}`}
+          subtitle="Invoices completed by this route on the selected day"
+          filter={{ routeCode: drill.routeCode }}
+          range={{ from: drill.date, to: drill.date }}
+          defaultTab="invoices"
+          onClose={() => setDrill(null)}
+        />
+      ) : null}
     </Screen>
   );
 }

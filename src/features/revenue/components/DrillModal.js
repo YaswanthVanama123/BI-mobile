@@ -42,14 +42,14 @@ function Tabs({ tabs, tab, onChange }) {
   );
 }
 
-export default function DrillModal({ title, subtitle, filter, range, onClose }) {
+export default function DrillModal({ title, subtitle, filter, range, onClose, defaultTab }) {
   const { from, to } = range || {};
   const showCustomers = !filter.customerId;
   const { data, loading, error, reload } = useApi(
     () => biService.revenueDrill({ ...filter, from, to }),
     [filter.routeCode, filter.customerId, filter.category, from, to],
   );
-  const [tab, setTab] = useState(showCustomers ? 'customers' : 'invoices');
+  const [tab, setTab] = useState(defaultTab || (showCustomers ? 'customers' : 'invoices'));
   const [drillCustomer, setDrillCustomer] = useState(null);
   const [invoice, setInvoice] = useState(null);
   const k = data && data.kpis;
