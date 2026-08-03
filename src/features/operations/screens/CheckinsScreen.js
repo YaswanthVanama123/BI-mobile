@@ -1,9 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import useApi from '@/hooks/useApi';
 import biService from '@/api/biService';
 import {
-  Screen, PageHeader, FilterBar, DateRangeFilter, RouteTabs, AsyncState, DataTable,
+  Screen, PageHeader, FilterBar, DateRangeFilter, RouteTabs, AsyncState, DataTable, Pager,
   StatGrid, StatCard, Badge, Card, SectionTitle, Muted,
 } from '@/components';
 import { BarChartCard, PieChartCard } from '@/components';
@@ -42,58 +42,53 @@ const routeSummaryColumns = [
 export default function CheckinsScreen() {
   const { range, setRange } = useFilters();
   const [route, setRoute] = useState('all');
+  const [sumPage, setSumPage] = useState(1);
   const [invoice, setInvoice] = useState(null);
   const { from, to } = range;
 
   const opts = useApi(() => biService.checkinOptions(), []);
   const { data, loading, error, reload } = useApi(
-    () => (from && to ? biService.checkins({ from, to, route }) : Promise.resolve({ data: [] })),
+    () => (from && to ? biService.checkins({ from, to, route }) : Promise.resolve({ data: null })),
     [from, to, route],
   );
+
+  useEffect(() => { setSumPage(1); }, [from, to, route]);
+  const allTime = route === 'all';
+  const summaryApi = useApi(
+    () => (from && to ? biService.checkins({ from, to, route, page: sumPage, pageSize: allTime ? 25 : 'all' }) : Promise.resolve({ data: null })),
+    [from, to, route, sumPage],
+  );
+  const summaryRows = (summaryApi.data && summaryApi.data.summary) || [];
+  const summaryTotal = (summaryApi.page && summaryApi.page.total) || 0;
+  const summaryTotalPages = (summaryApi.page && summaryApi.page.totalPages) || 1;
+  const exportSummary = async () => {
+    const res = await biService.checkins({ from, to, route, pageSize: 'all' });
+    return (res && res.data && res.data.summary) || [];
+  };
 
   const routes = (opts.data && opts.data.routes) || [];
   const earliest = opts.data && opts.data.earliestDate;
   const latest = opts.data && opts.data.latestDate;
-  const groups = data || [];
 
-  const kpi = useMemo(() => {
-    const totalStops = groups.reduce((t, g) => t + g.stopCount, 0);
-    const totalService = groups.reduce((t, g) => t + (g.totalServiceMinutes || 0), 0);
-    const totalGap = groups.reduce((t, g) => t + (g.totalGapMinutes || 0), 0);
-    const totalSpan = groups.reduce((t, g) => t + (g.spanMinutes || 0), 0);
-    const flagged = groups.reduce((t, g) => t + (g.flaggedStops || 0), 0);
-    const routesSet = new Set(groups.map((g) => g.route));
-    const daysSet = new Set(groups.map((g) => g.date));
-    return {
-      routes: routesSet.size,
-      days: daysSet.size,
-      totalStops,
-      totalService,
-      avgServicePerStop: totalStops ? totalService / totalStops : 0,
-      totalGap,
-      flagged,
-      servicePct: totalSpan ? (totalService / totalSpan) * 100 : 0,
-    };
-  }, [groups]);
-
-  const perRoute = useMemo(() => {
+  const stopsApi = useApi(
+    () => (route !== 'all' && from && to ? biService.checkinStops({ from, to, route, pageSize: 'all' }) : Promise.resolve({ data: [] })),
+    [from, to, route],
+  );
+  const stopsByDay = useMemo(() => {
     const m = new Map();
-    for (const g of groups) {
-      const a = m.get(g.route) || { route: g.route, stops: 0, service: 0, gap: 0, span: 0 };
-      a.stops += g.stopCount; a.service += g.totalServiceMinutes || 0; a.gap += g.totalGapMinutes || 0; a.span += g.spanMinutes || 0;
-      m.set(g.route, a);
-    }
-    return [...m.values()].sort((a, b) => b.span - a.span);
-  }, [groups]);
+    for (const s of (stopsApi.data || [])) { const k = s.dateKey; if (!m.has(k)) m.set(k, []); m.get(k).push(s); }
+    return m;
+  }, [stopsApi.data]);
 
-  const statusData = useMemo(() => {
-    const counts = {};
-    groups.forEach((g) => g.stops.forEach((s) => { counts[s.elapsedStatus] = (counts[s.elapsedStatus] || 0) + 1; }));
-    return Object.entries(counts).map(([name, value]) => ({ name, value }));
-  }, [groups]);
+  const kpi = (data && data.kpis) || { routes: 0, days: 0, totalStops: 0, totalService: 0, avgServicePerStop: 0, totalGap: 0, servicePct: 0 };
+  const perRoute = (data && data.perRoute) || [];
+  const statusData = (data && data.statusData) || [];
 
   const DETAIL_CAP = 40;
-  const detailGroups = useMemo(() => (route === 'all' ? [] : groups).slice(0, DETAIL_CAP), [groups, route]);
+  const detailGroups = useMemo(
+    () => (route === 'all' ? [] : summaryRows).slice(0, DETAIL_CAP).map((g) => ({ ...g, stops: stopsByDay.get(g.date) || [] })),
+    [summaryRows, route, stopsByDay],
+  );
 
   return (
     <Screen loading={loading || opts.loading} onRefresh={reload}>
@@ -103,8 +98,8 @@ export default function CheckinsScreen() {
       </FilterBar>
       <RouteTabs routes={routes} value={route} onChange={setRoute} />
 
-      <AsyncState loading={loading || opts.loading} error={error} empty={!loading && !error && groups.length === 0} onRetry={reload}>
-        {groups.length ? (
+      <AsyncState loading={loading || opts.loading} error={error} empty={!loading && !error && !data} onRetry={reload}>
+        {data ? (
           <>
             <StatGrid columns={2}>
               <StatCard label="Routes" value={formatNumber(kpi.routes)} sublabel={`${formatNumber(kpi.days)} day(s)`} tone="info" />
@@ -121,7 +116,10 @@ export default function CheckinsScreen() {
 
             <PieChartCard title="Elapsed-time check" subtitle="source vs computed" data={statusData} nameKey="name" valueKey="value" />
 
-            <DataTable title="Route / day summary" columns={routeSummaryColumns} rows={groups} />
+            <DataTable title="Route / day summary" columns={routeSummaryColumns} rows={summaryRows} onExportAll={exportSummary} exportName="checkins-summary" />
+            {allTime && summaryTotalPages > 1 ? (
+              <Pager page={sumPage} totalPages={summaryTotalPages} total={summaryTotal} loading={summaryApi.loading} onPrev={() => setSumPage((p) => Math.max(1, p - 1))} onNext={() => setSumPage((p) => Math.min(summaryTotalPages, p + 1))} />
+            ) : null}
 
             <SectionTitle>Stop detail (by route / day)</SectionTitle>
             {route === 'all' ? (
@@ -144,8 +142,8 @@ export default function CheckinsScreen() {
                     <DataTable columns={stopColumns} rows={g.stops.map((s, i) => ({ ...s, __seq: i + 1 }))} maxRows={200} onRowClick={(r) => r.invoiceNumber && setInvoice(r.invoiceNumber)} />
                   </Card>
                 ))}
-                {groups.length > detailGroups.length ? (
-                  <Card><Muted>Showing the first {detailGroups.length} of {groups.length} days for this route — narrow the date range to see the rest.</Muted></Card>
+                {summaryRows.length > detailGroups.length ? (
+                  <Card><Muted>Showing the first {detailGroups.length} of {summaryRows.length} days for this route — narrow the date range to see the rest.</Muted></Card>
                 ) : null}
               </>
             )}

@@ -176,6 +176,11 @@ export default function CustomersScreen() {
   const total = (pageInfo && pageInfo.total) || (meta && meta.total) || 0;
   const totalPages = (pageInfo && pageInfo.totalPages) || 1;
 
+  const exportAll = async () => {
+    const res = await biService.customers({ q: dq || undefined, from: from || undefined, to: to || undefined, pageSize: 'all' });
+    return (res && res.data) || [];
+  };
+
   const fetchStatus = useCallback(async () => {
     try { const res = await biService.customerAccountSyncStatus(); setJob((res && res.data) || null); return (res && res.data) || null; }
     catch { return null; }
@@ -274,7 +279,7 @@ export default function CustomersScreen() {
       <AsyncState loading={loading} error={error} empty={!loading && !error && rows.length === 0} onRetry={reload}>
         {rows.length ? (
           <>
-            <DataTable title="Customers" columns={columns} rows={rows} paginated={false} searchable={false} onRowClick={(r) => setSelected(r.routeStarCustomerId)} />
+            <DataTable title="Customers" columns={columns} rows={rows} paginated={false} searchable={false} onRowClick={(r) => setSelected(r.routeStarCustomerId)} onExportAll={exportAll} exportName="customers" />
             <Pager page={page} totalPages={totalPages} total={total} loading={loading} onPrev={() => setPage((p) => Math.max(1, p - 1))} onNext={() => setPage((p) => Math.min(totalPages, p + 1))} />
           </>
         ) : null}

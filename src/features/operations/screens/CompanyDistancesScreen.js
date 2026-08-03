@@ -79,6 +79,11 @@ export default function CompanyDistancesScreen() {
   const msg = jobMessage(job);
   const rows = data || [];
 
+  const exportAll = async () => {
+    const res = await biService.companyDistances({ status, from: fromId, to: toId, pageSize: 'all' });
+    return (res && res.data) || [];
+  };
+
   return (
     <Screen loading={loading} onRefresh={reload}>
       <PageHeader title="Distances / Driving Time" subtitle="RouteStar from→to company pairs. Distance is from RouteStar; driving time is null until you Sync. Sync runs in the background and computes only the pairs still pending." />
@@ -114,7 +119,7 @@ export default function CompanyDistancesScreen() {
       <AsyncState loading={loading} error={error} empty={!loading && !error && rows.length === 0} onRetry={reload}>
         {rows.length ? (
           <>
-            <DataTable title="Company distances" columns={columns} rows={rows} paginated={false} maxRows={PAGE_SIZE} />
+            <DataTable title="Company distances" columns={columns} rows={rows} paginated={false} maxRows={PAGE_SIZE} onExportAll={exportAll} exportName="company-distances" />
             <View style={styles.pager}>
               <Text style={styles.pagerText}>{filtered === 0 ? 'No matching pairs' : `Page ${page} of ${totalPages} · ${formatNumber(filtered)} pairs`}</Text>
               <View style={styles.pagerBtns}>

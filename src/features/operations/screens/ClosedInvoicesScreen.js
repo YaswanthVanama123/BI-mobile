@@ -48,6 +48,11 @@ export default function ClosedInvoicesScreen() {
   const totalPages = (pageInfo && pageInfo.totalPages) || 1;
   const subtitle = `Read directly from RouteStar (inventory_db). ${formatNumber(total)} closed invoices. Tap a row for line items.`;
 
+  const exportAll = async () => {
+    const res = await biService.closedInvoices({ q: dq || undefined, from: from || undefined, to: to || undefined, routeCode: route !== 'all' ? route : undefined, pageSize: 'all' });
+    return (res && res.data) || [];
+  };
+
   return (
     <Screen loading={loading} onRefresh={reload}>
       <PageHeader title="Closed Invoices" subtitle={subtitle} />
@@ -60,7 +65,7 @@ export default function ClosedInvoicesScreen() {
       <AsyncState loading={loading} error={error} empty={!loading && !error && rows.length === 0} onRetry={reload}>
         {rows.length ? (
           <>
-            <DataTable title="Closed invoices" columns={columns} rows={rows} paginated={false} searchable={false} onRowClick={(r) => setSelected(r.invoiceNumber)} />
+            <DataTable title="Closed invoices" columns={columns} rows={rows} paginated={false} searchable={false} onRowClick={(r) => setSelected(r.invoiceNumber)} onExportAll={exportAll} exportName="closed-invoices" />
             <Pager page={page} totalPages={totalPages} total={total} loading={loading} onPrev={() => setPage((p) => Math.max(1, p - 1))} onNext={() => setPage((p) => Math.min(totalPages, p + 1))} />
           </>
         ) : null}

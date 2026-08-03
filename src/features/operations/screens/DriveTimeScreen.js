@@ -1,8 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import useApi from '@/hooks/useApi';
 import biService from '@/api/biService';
 import {
-  Screen, PageHeader, FilterBar, DateRangeFilter, RouteTabs, AsyncState, DataTable,
+  Screen, PageHeader, FilterBar, DateRangeFilter, RouteTabs, AsyncState, DataTable, Pager,
   StatGrid, StatCard, Badge, Card, SectionTitle, Muted,
 } from '@/components';
 import { BarChartCard } from '@/components';
@@ -48,43 +48,37 @@ const allLegColumns = [
 export default function DriveTimeScreen() {
   const { range, setRange } = useFilters();
   const [routeCode, setRouteCode] = useState('all');
+  const [sumPage, setSumPage] = useState(1);
   const [drill, setDrill] = useState(null);
   const { from, to } = range;
 
   const opts = useApi(() => biService.driveTimeOptions(), []);
   const { data, loading, error, reload } = useApi(
-    () => (from && to ? biService.driveTime({ from, to, routeCode }) : Promise.resolve({ data: [] })),
+    () => (from && to ? biService.driveTime({ from, to, routeCode }) : Promise.resolve({ data: null })),
+    [from, to, routeCode],
+  );
+  useEffect(() => { setSumPage(1); }, [from, to, routeCode]);
+  const summaryApi = useApi(
+    () => (from && to ? biService.driveTime({ from, to, routeCode, page: sumPage, pageSize: 25 }) : Promise.resolve({ data: null })),
+    [from, to, routeCode, sumPage],
+  );
+  const summaryRows = (summaryApi.data && summaryApi.data.summary) || [];
+  const summaryTotal = (summaryApi.page && summaryApi.page.total) || 0;
+  const summaryTotalPages = (summaryApi.page && summaryApi.page.totalPages) || 1;
+  const exportSummary = async () => {
+    const res = await biService.driveTime({ from, to, routeCode, pageSize: 'all' });
+    return (res && res.data && res.data.summary) || [];
+  };
+  const legsApi = useApi(
+    () => (from && to ? biService.driveTimeLegs({ from, to, routeCode, pageSize: 'all' }) : Promise.resolve({ data: [] })),
     [from, to, routeCode],
   );
 
   const routeCodes = (opts.data && opts.data.routeCodes) || [];
-  const groups = data || [];
   const hasData = opts.data && opts.data.latestDate;
-
-  const kpi = useMemo(() => {
-    const legs = groups.reduce((t, g) => t + g.legCount, 0);
-    const driving = groups.reduce((t, g) => t + (g.drivingMinutes || 0), 0);
-    const observed = groups.reduce((t, g) => t + (g.observedGapMinutes || 0), 0);
-    const extra = groups.reduce((t, g) => t + (g.extraTimeMinutes || 0), 0);
-    const distance = groups.reduce((t, g) => t + (g.distanceMiles || 0), 0);
-    return { legs, driving, observed, extra, distance, avgExtra: legs ? extra / legs : 0 };
-  }, [groups]);
-
-  const perRoute = useMemo(() => {
-    const m = new Map();
-    for (const g of groups) {
-      const a = m.get(g.routeCode) || { routeCode: g.routeCode, driving: 0, extra: 0, distance: 0, legs: 0 };
-      a.driving += g.drivingMinutes || 0; a.extra += g.extraTimeMinutes || 0; a.distance += g.distanceMiles || 0; a.legs += g.legCount;
-      m.set(g.routeCode, a);
-    }
-    return [...m.values()].sort((a, b) => b.extra - a.extra);
-  }, [groups]);
-
-  const allLegs = useMemo(() => {
-    const rows = [];
-    for (const g of groups) for (const l of (g.legs || [])) rows.push({ ...l, routeCode: g.routeCode, date: g.date });
-    return rows;
-  }, [groups]);
+  const kpi = (data && data.kpis) || { legs: 0, driving: 0, observed: 0, extra: 0, distance: 0, avgExtra: 0 };
+  const perRoute = (data && data.perRoute) || [];
+  const allLegs = legsApi.data || [];
 
   return (
     <Screen loading={loading || opts.loading} onRefresh={reload}>
@@ -104,8 +98,8 @@ export default function DriveTimeScreen() {
       ) : null}
 
       {hasData ? (
-        <AsyncState loading={loading || opts.loading} error={error} empty={!loading && !error && groups.length === 0} onRetry={reload}>
-          {groups.length ? (
+        <AsyncState loading={loading || opts.loading} error={error} empty={!loading && !error && !data} onRetry={reload}>
+          {data ? (
             <>
               <StatGrid columns={2}>
                 <StatCard label="Legs" value={formatNumber(kpi.legs)} tone="info" />
@@ -120,7 +114,10 @@ export default function DriveTimeScreen() {
               <BarChartCard title="Driving vs extra by route (min)" data={perRoute} xKey="routeCode"
                 bars={[{ key: 'driving', label: 'Driving (min)', color: '#2563EB' }, { key: 'extra', label: 'Extra (min)', color: '#F59E0B' }]} valueFormatter={formatMinutes} />
 
-              <DataTable title="Route / day summary" columns={summaryColumns} rows={groups} onRowClick={(r) => setDrill(r)} />
+              <DataTable title="Route / day summary" columns={summaryColumns} rows={summaryRows} onRowClick={(r) => setDrill(r)} onExportAll={exportSummary} exportName="drive-time-summary" />
+              {summaryTotalPages > 1 ? (
+                <Pager page={sumPage} totalPages={summaryTotalPages} total={summaryTotal} loading={summaryApi.loading} onPrev={() => setSumPage((p) => Math.max(1, p - 1))} onNext={() => setSumPage((p) => Math.min(summaryTotalPages, p + 1))} />
+              ) : null}
 
               <SectionTitle>Leg detail (all routes)</SectionTitle>
               <DataTable title="Legs" columns={allLegColumns} rows={allLegs} maxRows={2000} />

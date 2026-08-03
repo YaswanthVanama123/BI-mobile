@@ -8,7 +8,7 @@ import useExportFormat from '@/hooks/useExportFormat';
 const DEFAULT_W = 130;
 
 export default function DataTable({
-  columns, rows, onRowClick, title, keyExtractor, exportName,
+  columns, rows, onRowClick, title, keyExtractor, exportName, onExportAll,
   paginated = true, pageSize = 25, maxRows = 500, searchable = true, searchPlaceholder = 'Search…',
 }) {
   const allData = Array.isArray(rows) ? rows : [];
@@ -37,9 +37,10 @@ export default function DataTable({
   };
 
   const onExport = async () => {
-    if (!total) return;
     try {
-      await exportTable(columns, data, exportName || title || 'export');
+      const rowsToExport = onExportAll ? await onExportAll() : data;
+      if (!rowsToExport || !rowsToExport.length) return;
+      await exportTable(columns, rowsToExport, exportName || title || 'export');
     } catch (e) {
       Alert.alert('Export failed', (e && e.message) || 'Could not export the table.');
     }
