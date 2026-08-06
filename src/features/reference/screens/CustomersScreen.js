@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet, Alert } from 'react-native';
 import useApi from '@/hooks/useApi';
 import useDebounce from '@/hooks/useDebounce';
 import biService from '@/api/biService';
@@ -161,6 +161,8 @@ export default function CustomersScreen() {
   const [selected, setSelected] = useState(null);
   const [job, setJob] = useState(null);
   const [cdJob, setCdJob] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteMsg, setDeleteMsg] = useState(null);
   const pollRef = useRef(null);
   const cdPollRef = useRef(null);
   const running = !!(job && job.running);
@@ -200,16 +202,39 @@ export default function CustomersScreen() {
   const onSync = async () => {
     try {
       const res = await biService.syncCustomerAccounts();
-      setJob((res && res.data && res.data.job) || { running: true, phase: 'fetching' });
+      setJob((res && res.data && res.data.job) || { running: true, phase: 'discovering' });
     } catch (e) {
       setJob({ running: false, phase: 'error', error: (e && e.message) || 'could not start' });
     }
   };
 
-  const msg = job && (job.phase === 'fetching'
-    ? `Syncing account numbers in the background… ${formatNumber(job.stored || 0)}/${formatNumber(job.total || 0)} done. You can leave this screen.`
-    : job.phase === 'done' ? `Sync complete: ${formatNumber(job.stored || 0)} customers updated (${formatNumber(job.withAccount || 0)} with an account #).`
-    : job.phase === 'error' ? `Sync failed: ${job.error || 'error'}` : null);
+  const doDeleteAll = async () => {
+    setDeleting(true); setDeleteMsg(null);
+    try {
+      const res = await biService.deleteAllCustomerAccounts();
+      setDeleteMsg(`Deleted ${formatNumber((res && res.data && res.data.deleted) || 0)} fetched customer records.`);
+      reload();
+    } catch (e) {
+      const m = (e && e.response && e.response.data && e.response.data.error && e.response.data.error.message) || (e && e.message) || 'error';
+      setDeleteMsg(`Delete failed: ${m}`);
+    } finally { setDeleting(false); }
+  };
+
+  const onDeleteAll = () => {
+    if (running || cdRunning || deleting) return;
+    Alert.alert(
+      'Delete all customer data?',
+      'Removes all fetched account #, service address, pricing, routes and activity from the BI database. This cannot be undone. RouteStar itself is not touched — you can re-fetch with "Fetch all data".',
+      [{ text: 'Cancel', style: 'cancel' }, { text: 'Delete all', style: 'destructive', onPress: doDeleteAll }],
+    );
+  };
+
+  const msg = job && (job.phase === 'discovering'
+    ? `Step 1 — checking all customers (create/update)… ${formatNumber(job.scanned || 0)} scanned, ${formatNumber(job.discovered || 0)} new.`
+    : job.phase === 'fetching'
+    ? `Step 2 — fetching details for customers without data… ${formatNumber(job.stored || 0)}/${formatNumber(job.total || 0)} done${job.discovered ? ` (${formatNumber(job.discovered)} new found)` : ''}. You can leave this screen.`
+    : job.phase === 'done' ? `Fetch complete: ${formatNumber(job.stored || 0)} customers fetched${job.discovered ? `, ${formatNumber(job.discovered)} newly discovered` : ''} (${formatNumber(job.withAccount || 0)} with an account #).`
+    : job.phase === 'error' ? `Fetch failed: ${job.error || 'error'}` : null);
 
   const fetchCdStatus = useCallback(async () => {
     try { const res = await biService.customerCreatedDatesSyncStatus(); setCdJob((res && res.data) || null); return (res && res.data) || null; }
@@ -250,9 +275,14 @@ export default function CustomersScreen() {
         </TouchableOpacity>
         <TouchableOpacity style={[styles.syncBtn, styles.syncBtnHalf, running && styles.syncBtnDisabled]} disabled={running} onPress={onSync} activeOpacity={0.7}>
           {running ? <ActivityIndicator size="small" color="#fff" /> : null}
-          <Text style={styles.syncText}>{running ? 'Syncing…' : 'Sync account numbers'}</Text>
+          <Text style={styles.syncText}>{running ? 'Fetching…' : 'Fetch customer data'}</Text>
         </TouchableOpacity>
       </View>
+
+      <TouchableOpacity style={[styles.syncBtn, styles.deleteBtn, (deleting || running || cdRunning) && styles.syncBtnDisabled]} disabled={deleting || running || cdRunning} onPress={onDeleteAll} activeOpacity={0.7}>
+        {deleting ? <ActivityIndicator size="small" color={theme.colors.danger ? theme.colors.danger[600] : '#dc2626'} /> : null}
+        <Text style={styles.deleteText}>{deleting ? 'Deleting…' : 'Delete all fetched data'}</Text>
+      </TouchableOpacity>
 
       <View style={{ marginBottom: 12, gap: 10 }}>
         <DateRangeFilter value={range} onChange={setRange} />
@@ -272,6 +302,14 @@ export default function CustomersScreen() {
           <View style={styles.msgRow}>
             {cdRunning ? <ActivityIndicator size="small" color={theme.colors.primary[600]} /> : null}
             <Text style={styles.msgText}>{cdMsg}</Text>
+          </View>
+        </Card>
+      ) : null}
+      {deleteMsg ? (
+        <Card style={{ marginBottom: 12 }}>
+          <View style={styles.msgRow}>
+            {deleting ? <ActivityIndicator size="small" color="#dc2626" /> : null}
+            <Text style={styles.msgText}>{deleteMsg}</Text>
           </View>
         </Card>
       ) : null}
@@ -298,6 +336,8 @@ const styles = StyleSheet.create({
   syncTextAlt: { color: theme.colors.primary[600], fontWeight: '700', fontSize: 13 },
   syncBtnDisabled: { opacity: 0.6 },
   syncText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  deleteBtn: { backgroundColor: theme.card, borderWidth: StyleSheet.hairlineWidth, borderColor: '#dc2626' },
+  deleteText: { color: '#dc2626', fontWeight: '700', fontSize: 13 },
   msgRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   msgText: { flex: 1, fontSize: 12.5, color: theme.colors.dark[600] },
   pairRow: { flexDirection: 'row', gap: 12 },
