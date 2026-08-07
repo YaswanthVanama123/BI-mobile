@@ -50,6 +50,7 @@ const biService = {
   customerAccount: (id) => get(`/customers/${encodeURIComponent(id)}/account`),
   syncCustomerAccounts: (body) => post('/customers/accounts/sync', body || {}, { timeout: 60000 }),
   customerAccountSyncStatus: () => get('/customers/accounts/sync/status'),
+  accountFetchRows: (f) => get('/customers/accounts/rows', f),
   deleteAllCustomerAccounts: () => del('/customers/accounts'),
   syncCustomerCreatedDates: (body) => post('/customers/created-dates/sync', body || {}, { timeout: 60000 }),
   customerCreatedDatesSyncStatus: () => get('/customers/created-dates/sync/status'),

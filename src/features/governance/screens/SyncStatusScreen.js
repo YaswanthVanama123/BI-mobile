@@ -7,6 +7,7 @@ import {
 } from '@/components';
 import theme from '@/theme';
 import { statusTone } from '@/utils/format';
+import FetchRowsModal from '@/features/reference/components/FetchRowsModal';
 
 const dt = (v) => (v ? new Date(v).toLocaleString() : '—');
 const dur = (ms) => {
@@ -21,6 +22,7 @@ const summaryText = (s) => (s && typeof s === 'object' ? Object.entries(s).filte
 export default function SyncStatusScreen() {
   const { data, loading, error, reload } = useApi(() => biService.syncStatus({}), []);
   const pollRef = useRef(null);
+  const [selectedRun, setSelectedRun] = useState(null);
   const running = (data && data.running) || [];
   const history = (data && data.history) || [];
   const watermarks = (data && data.watermarks) || [];
@@ -78,7 +80,10 @@ export default function SyncStatusScreen() {
             <View>
               <SectionTitle>Run history</SectionTitle>
               {history.length ? (
-                <DataTable columns={historyColumns} rows={history} maxRows={500} keyExtractor={(r, i) => r._id || i} />
+                <>
+                  <Muted style={{ marginBottom: 8 }}>Tap a “Customer account fetch” row to see the data stored in that run.</Muted>
+                  <DataTable columns={historyColumns} rows={history} maxRows={500} keyExtractor={(r, i) => r.id || i} onRowClick={(r) => { if (r.type === 'customer-accounts' && r.id) setSelectedRun(r); }} />
+                </>
               ) : (
                 <Card><Muted>No sync runs recorded yet — trigger a Sync (Customers or Distances) and it will appear here.</Muted></Card>
               )}
@@ -93,6 +98,7 @@ export default function SyncStatusScreen() {
           </View>
         ) : null}
       </AsyncState>
+      {selectedRun ? <FetchRowsModal runId={selectedRun.id} onClose={() => setSelectedRun(null)} /> : null}
     </Screen>
   );
 }

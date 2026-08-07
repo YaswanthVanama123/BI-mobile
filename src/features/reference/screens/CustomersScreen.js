@@ -10,6 +10,7 @@ import {
 import theme from '@/theme';
 import { statusTone, formatNumber, formatCurrency } from '@/utils/format';
 import InvoiceLinesModal from '@/features/revenue/components/InvoiceLinesModal';
+import FetchRowsModal from '@/features/reference/components/FetchRowsModal';
 
 const PAGE_SIZE = 25;
 
@@ -163,6 +164,7 @@ export default function CustomersScreen() {
   const [cdJob, setCdJob] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteMsg, setDeleteMsg] = useState(null);
+  const [rowsOpen, setRowsOpen] = useState(false);
   const pollRef = useRef(null);
   const cdPollRef = useRef(null);
   const running = !!(job && job.running);
@@ -279,6 +281,10 @@ export default function CustomersScreen() {
         </TouchableOpacity>
       </View>
 
+      <TouchableOpacity style={[styles.syncBtn, styles.rowsBtn]} onPress={() => setRowsOpen(true)} activeOpacity={0.7}>
+        <Text style={styles.rowsText}>View fetched rows</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity style={[styles.syncBtn, styles.deleteBtn, (deleting || running || cdRunning) && styles.syncBtnDisabled]} disabled={deleting || running || cdRunning} onPress={onDeleteAll} activeOpacity={0.7}>
         {deleting ? <ActivityIndicator size="small" color={theme.colors.danger ? theme.colors.danger[600] : '#dc2626'} /> : null}
         <Text style={styles.deleteText}>{deleting ? 'Deleting…' : 'Delete all fetched data'}</Text>
@@ -324,6 +330,7 @@ export default function CustomersScreen() {
       </AsyncState>
 
       {selected ? <CustomerDetailModal customerId={selected} onClose={() => setSelected(null)} /> : null}
+      {rowsOpen ? <FetchRowsModal runId={job && job.runId} onClose={() => setRowsOpen(false)} /> : null}
     </Screen>
   );
 }
@@ -338,6 +345,8 @@ const styles = StyleSheet.create({
   syncText: { color: '#fff', fontWeight: '700', fontSize: 14 },
   deleteBtn: { backgroundColor: theme.card, borderWidth: StyleSheet.hairlineWidth, borderColor: '#dc2626' },
   deleteText: { color: '#dc2626', fontWeight: '700', fontSize: 13 },
+  rowsBtn: { backgroundColor: theme.card, borderWidth: StyleSheet.hairlineWidth, borderColor: theme.border },
+  rowsText: { color: theme.colors.dark[700], fontWeight: '700', fontSize: 13 },
   msgRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   msgText: { flex: 1, fontSize: 12.5, color: theme.colors.dark[600] },
   pairRow: { flexDirection: 'row', gap: 12 },
