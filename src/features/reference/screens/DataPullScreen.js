@@ -18,7 +18,7 @@ const columns = [
   { key: 'routeId', header: 'Route ID', width: 90 },
   { key: 'stopSequence', header: 'Seq', align: 'right', width: 60, render: (r) => formatNumber(r.stopSequence) },
   { key: 'technicianId', header: 'Technician ID', width: 120 },
-  { key: 'technicianType', header: 'Technician type', width: 130, render: (r) => r.technicianType || '—' },
+  { key: 'serviceNotes', header: 'Technician type', width: 220, render: (r) => r.serviceNotes || '—' },
   { key: 'checkIn', header: 'Check-in', width: 150, render: (r) => r.checkIn || '—' },
   { key: 'checkOut', header: 'Check-out', width: 150, render: (r) => r.checkOut || '—' },
   { key: 'travelMinutes', header: 'Travel time', align: 'right', width: 100, render: (r) => (r.travelMinutes != null ? formatMinutes(r.travelMinutes) : '—'), csv: (r) => (r.travelMinutes != null ? formatMinutes(r.travelMinutes) : '') },
@@ -60,7 +60,7 @@ export default function DataPullScreen() {
       <FilterBar>
         <DateRangeFilter value={range} onChange={setRange} />
       </FilterBar>
-      <Muted style={{ marginBottom: 8 }}>Technician type, chemical cost and status date come from external sources not yet connected — shown as “—”. Service phase is derived from frequency.</Muted>
+      <Muted style={{ marginBottom: 8 }}>Chemical cost comes from an external source not yet connected — shown as “—”. Status date is the customer’s most recent activity date. Service phase is derived from frequency.</Muted>
 
       <AsyncState loading={loading} error={error} empty={!loading && !error && rows.length === 0} onRetry={reload}>
         {rows.length ? (
