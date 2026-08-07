@@ -210,6 +210,25 @@ export default function CustomersScreen() {
     }
   };
 
+  const onReFetchAll = () => {
+    if (running || cdRunning) return;
+    Alert.alert(
+      'Re-fetch all customers?',
+      'Re-fetches every customer from RouteStar (account #, pricing, routes, activity) to backfill older records. Runs in the background and never removes existing data.',
+      [{ text: 'Cancel', style: 'cancel' }, {
+        text: 'Re-fetch all',
+        onPress: async () => {
+          try {
+            const res = await biService.syncCustomerAccounts({ all: true });
+            setJob((res && res.data && res.data.job) || { running: true, phase: 'discovering' });
+          } catch (e) {
+            setJob({ running: false, phase: 'error', error: (e && e.message) || 'could not start' });
+          }
+        },
+      }],
+    );
+  };
+
   const doDeleteAll = async () => {
     setDeleting(true); setDeleteMsg(null);
     try {
@@ -280,6 +299,10 @@ export default function CustomersScreen() {
           <Text style={styles.syncText}>{running ? 'Fetching…' : 'Fetch customer data'}</Text>
         </TouchableOpacity>
       </View>
+
+      <TouchableOpacity style={[styles.syncBtn, styles.syncBtnAlt, (running || cdRunning) && styles.syncBtnDisabled]} disabled={running || cdRunning} onPress={onReFetchAll} activeOpacity={0.7}>
+        <Text style={styles.syncTextAlt}>Re-fetch all customers</Text>
+      </TouchableOpacity>
 
       <TouchableOpacity style={[styles.syncBtn, styles.rowsBtn]} onPress={() => setRowsOpen(true)} activeOpacity={0.7}>
         <Text style={styles.rowsText}>View fetched rows</Text>
