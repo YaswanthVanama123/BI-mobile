@@ -38,20 +38,21 @@ const columns = [
 export default function DataPullScreen() {
   const [range, setRange] = useState({ preset: 'this_year', from: '', to: '' });
   const [page, setPage] = useState(1);
+  const [q, setQ] = useState('');
   const [selected, setSelected] = useState(null);
   const { from, to } = range;
 
-  useEffect(() => { setPage(1); }, [from, to]);
+  useEffect(() => { setPage(1); }, [from, to, q]);
   const { data, meta, page: pageInfo, loading, error, reload } = useApi(
-    () => biService.dataPull({ from: from || undefined, to: to || undefined, page, pageSize: PAGE_SIZE }),
-    [from, to, page],
+    () => biService.dataPull({ from: from || undefined, to: to || undefined, q: q || undefined, page, pageSize: PAGE_SIZE }),
+    [from, to, q, page],
   );
   const rows = data || [];
   const total = (pageInfo && pageInfo.total) || (meta && meta.total) || 0;
   const totalPages = (pageInfo && pageInfo.totalPages) || 1;
 
   const exportAll = async () => {
-    const res = await biService.dataPull({ from: from || undefined, to: to || undefined, pageSize: 'all' });
+    const res = await biService.dataPull({ from: from || undefined, to: to || undefined, q: q || undefined, pageSize: 'all' });
     return (res && res.data) || [];
   };
 
@@ -66,7 +67,7 @@ export default function DataPullScreen() {
       <AsyncState loading={loading} error={error} empty={!loading && !error && rows.length === 0} onRetry={reload}>
         {rows.length ? (
           <>
-            <DataTable title="Data pull" columns={columns} rows={rows} paginated={false} searchable={false} onExportAll={exportAll} exportName="bi-data-pull" onRowClick={(r) => r.stopId && setSelected(r.stopId)} />
+            <DataTable title="Data pull" columns={columns} rows={rows} paginated={false} searchable onServerSearch={setQ} searchPlaceholder="Search all stops…" onExportAll={exportAll} exportName="bi-data-pull" onRowClick={(r) => r.stopId && setSelected(r.stopId)} />
             <Pager page={page} totalPages={totalPages} total={total} loading={loading} onPrev={() => setPage((p) => Math.max(1, p - 1))} onNext={() => setPage((p) => Math.min(totalPages, p + 1))} />
           </>
         ) : null}

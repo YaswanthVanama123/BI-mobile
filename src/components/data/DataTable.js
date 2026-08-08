@@ -8,16 +8,21 @@ import useExportFormat from '@/hooks/useExportFormat';
 const DEFAULT_W = 130;
 
 export default function DataTable({
-  columns, rows, onRowClick, title, keyExtractor, exportName, onExportAll,
+  columns, rows, onRowClick, title, keyExtractor, exportName, onExportAll, onServerSearch,
   paginated = true, pageSize = 25, maxRows = 500, searchable = true, searchPlaceholder = 'Search…',
 }) {
   const allData = Array.isArray(rows) ? rows : [];
   const [query, setQuery] = useState('');
   const qq = query.trim().toLowerCase();
-  const showSearch = searchable && allData.length > 5;
-  const data = qq
-    ? allData.filter((row) => Object.values(row).some((v) => v != null && typeof v !== 'object' && String(v).toLowerCase().includes(qq)))
-    : allData;
+  const showSearch = searchable && (onServerSearch ? true : allData.length > 0);
+  useEffect(() => {
+    if (!onServerSearch) return undefined;
+    const t = setTimeout(() => onServerSearch(query.trim()), 350);
+    return () => clearTimeout(t);
+  }, [query, onServerSearch]);
+  const data = (onServerSearch || !qq)
+    ? allData
+    : allData.filter((row) => Object.values(row).some((v) => v != null && typeof v !== 'object' && String(v).toLowerCase().includes(qq)));
   const total = data.length;
   const totalPages = paginated ? Math.max(1, Math.ceil(total / pageSize)) : 1;
   const [page, setPage] = useState(0);
