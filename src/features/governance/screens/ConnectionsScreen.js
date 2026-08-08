@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import useApi from '@/hooks/useApi';
 import biService from '@/api/biService';
 import {
@@ -8,7 +8,7 @@ import {
 import theme from '@/theme';
 import { formatNumber } from '@/utils/format';
 import useExportFormat from '@/hooks/useExportFormat';
-import { setExportFormat } from '@/utils/appSettings';
+import { setExportFormat, getPayrollAnchor, setPayrollAnchor, subscribePayrollAnchor } from '@/utils/appSettings';
 
 function ExportFormatSetting() {
   const fmt = useExportFormat();
@@ -37,6 +37,27 @@ function ExportFormatSetting() {
         {option('excel', 'Excel (.xlsx)', 'Filters on; numbers & dates typed.')}
         {option('csv', 'CSV (.csv)', 'Plain values; opens anywhere.')}
       </View>
+    </Card>
+  );
+}
+
+function PayrollAnchorSetting() {
+  const [anchor, setAnchor] = React.useState(getPayrollAnchor());
+  React.useEffect(() => subscribePayrollAnchor(setAnchor), []);
+  return (
+    <Card style={{ marginBottom: 12 }}>
+      <Text style={styles.settingTitle}>Payroll anchor date</Text>
+      <Text style={styles.settingSub}>The most recent payroll date (YYYY-MM-DD). The Payroll Hours screen builds bi-weekly periods backward from this date.</Text>
+      <TextInput
+        style={styles.dateInput}
+        value={anchor}
+        onChangeText={setAnchor}
+        onEndEditing={(e) => setPayrollAnchor((e.nativeEvent.text || '').trim())}
+        placeholder="YYYY-MM-DD"
+        placeholderTextColor={theme.textFaint}
+        autoCapitalize="none"
+        autoCorrect={false}
+      />
     </Card>
   );
 }
@@ -100,6 +121,7 @@ export default function ConnectionsScreen() {
       <PageHeader title="Data Connections" subtitle="Live status of every database the BI platform reads: the inventory / RouteStar source and the EnviroMaster server (mapdistance) source. Green means the API connected and can read that DB." />
       {meta && meta.generatedAt ? <Muted style={{ marginBottom: 12 }}>Checked {new Date(meta.generatedAt).toLocaleString()}</Muted> : null}
       <ExportFormatSetting />
+      <PayrollAnchorSetting />
       <AsyncState loading={loading} error={error} empty={!loading && !error && rows.length === 0} onRetry={reload}>
         {rows.length ? (
           <View>
@@ -127,6 +149,7 @@ const styles = StyleSheet.create({
   errText: { fontSize: 13, color: theme.colors.danger[600] },
   settingTitle: { fontSize: 15, fontWeight: '700', color: theme.colors.dark[800] },
   settingSub: { fontSize: 12, color: theme.textFaint, marginTop: 4, marginBottom: 12 },
+  dateInput: { borderWidth: StyleSheet.hairlineWidth, borderColor: theme.border, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: theme.text },
   optRow: { flexDirection: 'row', gap: 10 },
   optCard: { flex: 1, borderWidth: StyleSheet.hairlineWidth, borderColor: theme.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10 },
   optCardActive: { borderColor: theme.colors.primary[500], backgroundColor: theme.colors.primary[50] },

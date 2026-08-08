@@ -13,6 +13,7 @@ import RevenueByCustomerScreen from '@/features/revenue/screens/RevenueByCustome
 import RevenuePerStopScreen from '@/features/revenue/screens/RevenuePerStopScreen';
 import ItemFrequencyScreen from '@/features/revenue/screens/ItemFrequencyScreen';
 import PayrollCostScreen from '@/features/cost/screens/PayrollCostScreen';
+import PayrollHoursScreen from '@/features/cost/screens/PayrollHoursScreen';
 import LaborPerStopScreen from '@/features/cost/screens/LaborPerStopScreen';
 import RouteProfitabilityScreen from '@/features/cost/screens/RouteProfitabilityScreen';
 import CustomersScreen from '@/features/reference/screens/CustomersScreen';
@@ -57,6 +58,7 @@ export const NAV = [
     section: 'Cost & Profitability',
     items: [
       { name: 'PayrollCost', label: 'Payroll Cost', icon: 'wallet-outline', component: PayrollCostScreen },
+      { name: 'PayrollHours', label: 'Payroll Hours', icon: 'time-outline', component: PayrollHoursScreen },
       { name: 'LaborPerStop', label: 'Labor Cost per Stop', icon: 'pricetags-outline', component: LaborPerStopScreen },
       { name: 'RouteProfitability', label: 'Route Profitability', icon: 'trending-up-outline', component: RouteProfitabilityScreen },
     ],

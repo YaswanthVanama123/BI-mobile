@@ -30,3 +30,34 @@ export function subscribeExportFormat(fn) {
 }
 
 loadExportFormat();
+
+const ANCHOR_KEY = 'bi.payrollAnchor';
+let anchor = '';
+const anchorListeners = new Set();
+
+export function getPayrollAnchor() {
+  return anchor;
+}
+
+export async function loadPayrollAnchor() {
+  try {
+    const v = await AsyncStorage.getItem(ANCHOR_KEY);
+    if (v) anchor = v;
+  } catch (e) {}
+  anchorListeners.forEach((fn) => fn(anchor));
+  return anchor;
+}
+
+export async function setPayrollAnchor(date) {
+  anchor = date || '';
+  try { await AsyncStorage.setItem(ANCHOR_KEY, anchor); } catch (e) {}
+  anchorListeners.forEach((fn) => fn(anchor));
+  return anchor;
+}
+
+export function subscribePayrollAnchor(fn) {
+  anchorListeners.add(fn);
+  return () => anchorListeners.delete(fn);
+}
+
+loadPayrollAnchor();

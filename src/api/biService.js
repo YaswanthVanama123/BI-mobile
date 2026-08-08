@@ -42,6 +42,7 @@ const biService = {
   payrollCost: (f) => get('/payroll/cost', f),
   uploadPayrollCsv: (file) => upload('/payroll/upload', file),
   laborCostPerStop: (f) => get('/cost/labor-per-stop', f),
+  payrollHours: (f) => get('/payroll-hours', f),
   routeProfitability: (routeCode, f) => get(`/routes/${routeCode || 'all'}/profitability`, f),
   customerProfitability: (id, f) => get(`/customers/${id}/profitability`, f),
 
