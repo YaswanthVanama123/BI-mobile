@@ -13,6 +13,7 @@ const columns = [
   { key: 'serviceDate', header: 'Service date', width: 110, render: (r) => formatDateShort(r.serviceDate) },
   { key: 'stopId', header: 'Stop ID', width: 110 },
   { key: 'customerId', header: 'Customer ID', width: 120 },
+  { key: 'accountNumber', header: 'Account #', width: 120, render: (r) => r.accountNumber || '—' },
   { key: 'customerName', header: 'Customer name', width: 180 },
   { key: 'serviceAddress', header: 'Service address', width: 220, render: (r) => r.serviceAddress || '—' },
   { key: 'routeId', header: 'Route ID', width: 90 },
