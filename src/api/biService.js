@@ -21,6 +21,7 @@ const biService = {
   companyDistances: (f) => get('/company-distances', f),
   companyDistanceOptions: () => get('/company-distances/options'),
   syncCompanyDistances: (body) => post('/company-distances/sync', body || {}, { timeout: 60000 }),
+  retryFailedCompanyDistances: (body) => post('/company-distances/retry-failed', body || {}, { timeout: 60000 }),
   companyDistanceSyncStatus: () => get('/company-distances/sync/status'),
   routeLegs: (f) => get('/route-legs', f),
   serviceVsDriveTime: (f) => get('/service-vs-drive-time', f),

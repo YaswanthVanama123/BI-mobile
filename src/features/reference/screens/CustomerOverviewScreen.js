@@ -1,9 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import useApi from '@/hooks/useApi';
-import useDebounce from '@/hooks/useDebounce';
 import biService from '@/api/biService';
 import {
-  Screen, PageHeader, FilterBar, DateRangeFilter, Select, SearchInput, AsyncState, DataTable,
+  Screen, PageHeader, FilterBar, DateRangeFilter, Select, AsyncState, DataTable,
   StatGrid, StatCard, BarChartCard, LineChartCard, PieChartCard,
 } from '@/components';
 import { useFilters } from '@/context/FiltersContext';
@@ -28,14 +27,12 @@ export default function CustomerOverviewScreen() {
   const { range, setRange } = useFilters();
   const { from, to } = range;
   const [routeCode, setRouteCode] = useState('all');
-  const [q, setQ] = useState('');
   const [selected, setSelected] = useState(null);
-  const dq = useDebounce(q, 400);
 
   const opts = useApi(() => biService.driveTimeOptions(), []);
   const { data, loading, error, reload } = useApi(
-    () => biService.customersOverview({ from, to, routeCode: routeCode === 'all' ? undefined : routeCode, q: dq || undefined }),
-    [from, to, routeCode, dq],
+    () => biService.customersOverview({ from, to, routeCode: routeCode === 'all' ? undefined : routeCode }),
+    [from, to, routeCode],
   );
   const routeCodes = (opts.data && opts.data.routeCodes) || [];
   const k = data && data.kpis;
@@ -54,7 +51,6 @@ export default function CustomerOverviewScreen() {
       <FilterBar>
         <DateRangeFilter value={range} onChange={setRange} min={opts.data && opts.data.earliestDate} max={opts.data && opts.data.latestDate} />
         <Select label="Route" value={routeCode} onChange={setRouteCode} options={[{ value: 'all', label: 'All routes' }, ...routeCodes.map((r) => ({ value: r, label: r }))]} />
-        <SearchInput label="Search customer" value={q} onChangeText={setQ} placeholder="name / route…" />
       </FilterBar>
 
       <AsyncState loading={loading} error={error} empty={!loading && !error && !k} onRetry={reload}>
@@ -73,8 +69,8 @@ export default function CustomerOverviewScreen() {
             <BarChartCard title="Top customers by invoices" data={topByInvoices} xKey="customer" bars={[{ key: 'invoices', label: 'Invoices', color: '#4F46E5' }]} />
             <BarChartCard title="Top customers by revenue" data={topByRevenue} xKey="customer" bars={[{ key: 'invoiced', label: 'Invoiced', color: '#10B981' }]} />
             <PieChartCard title="Customers by route" data={byRoute} nameKey="routeCode" valueKey="customers" />
-            <DataTable title={`New customers created (${newCustomers.length})`} columns={newCustomerColumns} rows={newCustomers} searchable={false} onRowClick={(r) => setSelected(r)} />
-            <DataTable title="All active customers" columns={columns} rows={filtered} searchable={false} onRowClick={(r) => setSelected(r)} />
+            <DataTable title={`New customers created (${newCustomers.length})`} columns={newCustomerColumns} rows={newCustomers} searchPlaceholder="Search customer / account…" onRowClick={(r) => setSelected(r)} />
+            <DataTable title="All active customers" columns={columns} rows={filtered} searchPlaceholder="Search customer / route…" onRowClick={(r) => setSelected(r)} />
           </>
         ) : null}
       </AsyncState>

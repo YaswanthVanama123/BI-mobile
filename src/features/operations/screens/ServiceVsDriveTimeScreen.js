@@ -58,16 +58,17 @@ export default function ServiceVsDriveTimeScreen() {
   const k = data && data.kpis;
 
   const [dayPage, setDayPage] = useState(1);
-  useEffect(() => { setDayPage(1); }, [from, to, routeCode, granularity]);
+  const [dayQ, setDayQ] = useState('');
+  useEffect(() => { setDayPage(1); }, [from, to, routeCode, granularity, dayQ]);
   const dayApi = useApi(
-    () => (from && to ? biService.serviceVsDriveTime({ from, to, routeCode, granularity, page: dayPage, pageSize: 25 }) : Promise.resolve({ data: null })),
-    [from, to, routeCode, granularity, dayPage],
+    () => (from && to ? biService.serviceVsDriveTime({ from, to, routeCode, granularity, q: dayQ || undefined, page: dayPage, pageSize: 25 }) : Promise.resolve({ data: null })),
+    [from, to, routeCode, granularity, dayQ, dayPage],
   );
   const byRouteDay = (dayApi.data && dayApi.data.byRouteDay) || [];
   const dayTotal = (dayApi.page && dayApi.page.total) || 0;
   const dayTotalPages = (dayApi.page && dayApi.page.totalPages) || 1;
   const exportDays = async () => {
-    const res = await biService.serviceVsDriveTime({ from, to, routeCode, granularity, pageSize: 'all' });
+    const res = await biService.serviceVsDriveTime({ from, to, routeCode, granularity, q: dayQ || undefined, pageSize: 'all' });
     return (res && res.data && res.data.byRouteDay) || [];
   };
 
@@ -112,7 +113,7 @@ export default function ServiceVsDriveTimeScreen() {
             <DataTable title="By technician" columns={mkColumns('technician', 'Technician')} rows={data.byTechnician} maxRows={500} />
 
             <SectionTitle>Day by day (all routes)</SectionTitle>
-            <DataTable title="Day by day" columns={dayColumns} rows={byRouteDay} paginated={false} onRowClick={(r) => setDrill(r)} onExportAll={exportDays} exportName="service-vs-drive-day" />
+            <DataTable title="Day by day" columns={dayColumns} rows={byRouteDay} paginated={false} onServerSearch={setDayQ} searchPlaceholder="Search route / date…" onRowClick={(r) => setDrill(r)} onExportAll={exportDays} exportName="service-vs-drive-day" />
             {dayTotalPages > 1 ? (
               <Pager page={dayPage} totalPages={dayTotalPages} total={dayTotal} loading={dayApi.loading} onPrev={() => setDayPage((p) => Math.max(1, p - 1))} onNext={() => setDayPage((p) => Math.min(dayTotalPages, p + 1))} />
             ) : null}

@@ -1,10 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet, Alert } from 'react-native';
 import useApi from '@/hooks/useApi';
-import useDebounce from '@/hooks/useDebounce';
 import biService from '@/api/biService';
 import {
-  Screen, PageHeader, DateRangeFilter, SearchInput, AsyncState, DataTable, Pager,
+  Screen, PageHeader, DateRangeFilter, AsyncState, DataTable, Pager,
   Badge, Card, DetailModal, SectionTitle, Muted, StatGrid, StatCard,
 } from '@/components';
 import theme from '@/theme';
@@ -156,7 +155,6 @@ function CustomerDetailModal({ customerId, onClose }) {
 
 export default function CustomersScreen() {
   const [q, setQ] = useState('');
-  const dq = useDebounce(q, 400);
   const [range, setRange] = useState({ preset: 'all_time', from: '', to: '' });
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState(null);
@@ -170,18 +168,18 @@ export default function CustomersScreen() {
   const running = !!(job && job.running);
   const cdRunning = !!(cdJob && cdJob.running);
   const { from, to } = range;
-  useEffect(() => { setPage(1); }, [dq, from, to]);
+  useEffect(() => { setPage(1); }, [q, from, to]);
 
   const { data, page: pageInfo, meta, loading, error, reload } = useApi(
-    () => biService.customers({ q: dq || undefined, from: from || undefined, to: to || undefined, page, pageSize: PAGE_SIZE }),
-    [dq, from, to, page],
+    () => biService.customers({ q: q || undefined, from: from || undefined, to: to || undefined, page, pageSize: PAGE_SIZE }),
+    [q, from, to, page],
   );
   const rows = data || [];
   const total = (pageInfo && pageInfo.total) || (meta && meta.total) || 0;
   const totalPages = (pageInfo && pageInfo.totalPages) || 1;
 
   const exportAll = async () => {
-    const res = await biService.customers({ q: dq || undefined, from: from || undefined, to: to || undefined, pageSize: 'all' });
+    const res = await biService.customers({ q: q || undefined, from: from || undefined, to: to || undefined, pageSize: 'all' });
     return (res && res.data) || [];
   };
 
@@ -315,7 +313,6 @@ export default function CustomersScreen() {
 
       <View style={{ marginBottom: 12, gap: 10 }}>
         <DateRangeFilter value={range} onChange={setRange} />
-        <SearchInput value={q} onChangeText={setQ} placeholder="Search name / account # / RouteStar ID…" />
       </View>
 
       {msg ? (
@@ -346,7 +343,7 @@ export default function CustomersScreen() {
       <AsyncState loading={loading} error={error} empty={!loading && !error && rows.length === 0} onRetry={reload}>
         {rows.length ? (
           <>
-            <DataTable title="Customers" columns={columns} rows={rows} paginated={false} searchable={false} onRowClick={(r) => setSelected(r.routeStarCustomerId)} onExportAll={exportAll} exportName="customers" />
+            <DataTable title="Customers" columns={columns} rows={rows} paginated={false} onServerSearch={setQ} searchPlaceholder="Search name / account # / RouteStar ID…" onRowClick={(r) => setSelected(r.routeStarCustomerId)} onExportAll={exportAll} exportName="customers" />
             <Pager page={page} totalPages={totalPages} total={total} loading={loading} onPrev={() => setPage((p) => Math.max(1, p - 1))} onNext={() => setPage((p) => Math.min(totalPages, p + 1))} />
           </>
         ) : null}

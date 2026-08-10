@@ -43,6 +43,7 @@ export default function CheckinsScreen() {
   const { range, setRange } = useFilters();
   const [route, setRoute] = useState('all');
   const [sumPage, setSumPage] = useState(1);
+  const [sumQ, setSumQ] = useState('');
   const [invoice, setInvoice] = useState(null);
   const { from, to } = range;
 
@@ -52,17 +53,17 @@ export default function CheckinsScreen() {
     [from, to, route],
   );
 
-  useEffect(() => { setSumPage(1); }, [from, to, route]);
+  useEffect(() => { setSumPage(1); }, [from, to, route, sumQ]);
   const allTime = route === 'all';
   const summaryApi = useApi(
-    () => (from && to ? biService.checkins({ from, to, route, page: sumPage, pageSize: allTime ? 25 : 'all' }) : Promise.resolve({ data: null })),
-    [from, to, route, sumPage],
+    () => (from && to ? biService.checkins({ from, to, route, q: sumQ || undefined, page: sumPage, pageSize: allTime ? 25 : 'all' }) : Promise.resolve({ data: null })),
+    [from, to, route, sumQ, sumPage],
   );
   const summaryRows = (summaryApi.data && summaryApi.data.summary) || [];
   const summaryTotal = (summaryApi.page && summaryApi.page.total) || 0;
   const summaryTotalPages = (summaryApi.page && summaryApi.page.totalPages) || 1;
   const exportSummary = async () => {
-    const res = await biService.checkins({ from, to, route, pageSize: 'all' });
+    const res = await biService.checkins({ from, to, route, q: sumQ || undefined, pageSize: 'all' });
     return (res && res.data && res.data.summary) || [];
   };
 
@@ -116,7 +117,7 @@ export default function CheckinsScreen() {
 
             <PieChartCard title="Elapsed-time check" subtitle="source vs computed" data={statusData} nameKey="name" valueKey="value" />
 
-            <DataTable title="Route / day summary" columns={routeSummaryColumns} rows={summaryRows} onExportAll={exportSummary} exportName="checkins-summary" />
+            <DataTable title="Route / day summary" columns={routeSummaryColumns} rows={summaryRows} onServerSearch={setSumQ} searchPlaceholder="Search route / date / invoice…" onExportAll={exportSummary} exportName="checkins-summary" />
             {allTime && summaryTotalPages > 1 ? (
               <Pager page={sumPage} totalPages={summaryTotalPages} total={summaryTotal} loading={summaryApi.loading} onPrev={() => setSumPage((p) => Math.max(1, p - 1))} onNext={() => setSumPage((p) => Math.min(summaryTotalPages, p + 1))} />
             ) : null}

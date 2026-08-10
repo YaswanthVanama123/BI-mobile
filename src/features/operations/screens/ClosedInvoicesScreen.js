@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import useApi from '@/hooks/useApi';
-import useDebounce from '@/hooks/useDebounce';
 import biService from '@/api/biService';
 import {
-  Screen, PageHeader, FilterBar, DateRangeFilter, SearchInput, RouteTabs, AsyncState, DataTable, Pager, Badge,
+  Screen, PageHeader, FilterBar, DateRangeFilter, RouteTabs, AsyncState, DataTable, Pager, Badge,
 } from '@/components';
 import { formatCurrency, formatDateShort, formatNumber, statusTone } from '@/utils/format';
 import InvoiceLinesModal from '@/features/revenue/components/InvoiceLinesModal';
@@ -27,20 +26,19 @@ const columns = [
 
 export default function ClosedInvoicesScreen() {
   const [q, setQ] = useState('');
-  const dq = useDebounce(q, 400);
   const [range, setRange] = useState({ preset: 'all_time', from: '', to: '' });
   const [route, setRoute] = useState('all');
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState(null);
   const { from, to } = range;
-  useEffect(() => { setPage(1); }, [dq, from, to, route]);
+  useEffect(() => { setPage(1); }, [q, from, to, route]);
 
   const opts = useApi(() => biService.checkinOptions(), []);
   const routes = (opts.data && opts.data.routes) || [];
 
   const { data, meta, page: pageInfo, loading, error, reload } = useApi(
-    () => biService.closedInvoices({ q: dq || undefined, from: from || undefined, to: to || undefined, routeCode: route !== 'all' ? route : undefined, page, pageSize: PAGE_SIZE }),
-    [dq, from, to, route, page],
+    () => biService.closedInvoices({ q: q || undefined, from: from || undefined, to: to || undefined, routeCode: route !== 'all' ? route : undefined, page, pageSize: PAGE_SIZE }),
+    [q, from, to, route, page],
   );
 
   const rows = data || [];
@@ -49,7 +47,7 @@ export default function ClosedInvoicesScreen() {
   const subtitle = `Read directly from RouteStar (inventory_db). ${formatNumber(total)} closed invoices. Tap a row for line items.`;
 
   const exportAll = async () => {
-    const res = await biService.closedInvoices({ q: dq || undefined, from: from || undefined, to: to || undefined, routeCode: route !== 'all' ? route : undefined, pageSize: 'all' });
+    const res = await biService.closedInvoices({ q: q || undefined, from: from || undefined, to: to || undefined, routeCode: route !== 'all' ? route : undefined, pageSize: 'all' });
     return (res && res.data) || [];
   };
 
@@ -58,14 +56,13 @@ export default function ClosedInvoicesScreen() {
       <PageHeader title="Closed Invoices" subtitle={subtitle} />
       <FilterBar>
         <DateRangeFilter value={range} onChange={setRange} />
-        <SearchInput label="Search" value={q} onChangeText={setQ} placeholder="Invoice # / customer…" />
       </FilterBar>
       <RouteTabs routes={routes} value={route} onChange={setRoute} allLabel="All" />
 
       <AsyncState loading={loading} error={error} empty={!loading && !error && rows.length === 0} onRetry={reload}>
         {rows.length ? (
           <>
-            <DataTable title="Closed invoices" columns={columns} rows={rows} paginated={false} searchable={false} onRowClick={(r) => setSelected(r.invoiceNumber)} onExportAll={exportAll} exportName="closed-invoices" />
+            <DataTable title="Closed invoices" columns={columns} rows={rows} paginated={false} onServerSearch={setQ} searchPlaceholder="Search invoice # / customer / technician…" onRowClick={(r) => setSelected(r.invoiceNumber)} onExportAll={exportAll} exportName="closed-invoices" />
             <Pager page={page} totalPages={totalPages} total={total} loading={loading} onPrev={() => setPage((p) => Math.max(1, p - 1))} onNext={() => setPage((p) => Math.min(totalPages, p + 1))} />
           </>
         ) : null}

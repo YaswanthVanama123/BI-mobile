@@ -74,6 +74,15 @@ export default function CompanyDistancesScreen() {
     }
   };
 
+  const onRetryFailed = async () => {
+    try {
+      const res = await biService.retryFailedCompanyDistances();
+      setJob((res && res.data && res.data.job) || { running: true, phase: 'syncing' });
+    } catch (e) {
+      setJob({ running: false, phase: 'error', error: (e && e.message) || 'could not start' });
+    }
+  };
+
   const totalPages = (pageMeta && pageMeta.totalPages) || 1;
   const filtered = (pageMeta && pageMeta.total) || 0;
   const msg = jobMessage(job);
@@ -93,11 +102,18 @@ export default function CompanyDistancesScreen() {
         <Text style={styles.syncText}>{running ? 'Syncing…' : 'Sync with Mapbox'}</Text>
       </TouchableOpacity>
 
+      {meta && meta.failed > 0 ? (
+        <TouchableOpacity style={[styles.retryBtn, running && styles.syncBtnDisabled]} disabled={running} onPress={onRetryFailed} activeOpacity={0.7}>
+          <Text style={styles.retryText}>Retry failed ({formatNumber(meta.failed)})</Text>
+        </TouchableOpacity>
+      ) : null}
+
       {meta ? (
         <StatGrid columns={2}>
           <StatCard label="Total pairs" value={formatNumber(meta.total)} tone="info" />
           <StatCard label="Synced" value={formatNumber(meta.synced)} tone="success" />
           <StatCard label="Pending (null)" value={formatNumber(meta.pending)} tone={meta.pending ? 'warning' : 'success'} />
+          <StatCard label="Mapbox failed" value={formatNumber(meta.failed || 0)} sublabel="retryable" tone={meta.failed ? 'danger' : 'success'} />
         </StatGrid>
       ) : null}
 
@@ -144,6 +160,8 @@ const styles = StyleSheet.create({
   syncBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: theme.colors.primary[600], borderRadius: 8, paddingVertical: 12, marginBottom: 14 },
   syncBtnDisabled: { opacity: 0.6 },
   syncText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  retryBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: theme.card, borderWidth: StyleSheet.hairlineWidth, borderColor: theme.colors.danger ? theme.colors.danger[600] : '#dc2626', borderRadius: 8, paddingVertical: 11, marginBottom: 14, marginTop: -4 },
+  retryText: { color: theme.colors.danger ? theme.colors.danger[600] : '#dc2626', fontWeight: '700', fontSize: 13.5 },
   msgRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   msgText: { flex: 1, fontSize: 12.5, color: theme.colors.dark[600] },
   pager: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 },

@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import useApi from '@/hooks/useApi';
 import biService from '@/api/biService';
 import {
-  Screen, PageHeader, FilterBar, DateRangeFilter, Select, SearchInput, AsyncState, DataTable,
+  Screen, PageHeader, FilterBar, DateRangeFilter, Select, AsyncState, DataTable,
   StatGrid, StatCard, Badge, BarChartCard,
 } from '@/components';
 import { useFilters } from '@/context/FiltersContext';
@@ -14,7 +14,6 @@ const pctTone = (p) => (p == null ? 'neutral' : p >= 90 ? 'success' : p >= 50 ? 
 export default function RevenueByCustomerScreen() {
   const { range, setRange } = useFilters();
   const [routeCode, setRouteCode] = useState('all');
-  const [q, setQ] = useState('');
   const [selected, setSelected] = useState(null);
   const { from, to } = range;
   const isAllTime = range.preset === 'all_time';
@@ -24,8 +23,6 @@ export default function RevenueByCustomerScreen() {
   const routeCodes = (opts.data && opts.data.routeCodes) || [];
   const k = data && data.kpis;
   const rows = (data && data.rows) || [];
-  const term = q.trim().toLowerCase();
-  const filtered = useMemo(() => (term ? rows.filter((r) => `${r.customer} ${r.routeCode}`.toLowerCase().includes(term)) : rows), [rows, term]);
   const topChart = rows.slice(0, 12);
   const columns = useMemo(() => [
     { key: 'customer', header: 'Customer', width: 180 },
@@ -43,7 +40,6 @@ export default function RevenueByCustomerScreen() {
       <FilterBar>
         <DateRangeFilter value={range} onChange={setRange} min={opts.data && opts.data.earliestDate} max={opts.data && opts.data.latestDate} />
         <Select label="Route" value={routeCode} onChange={setRouteCode} options={[{ value: 'all', label: 'All routes' }, ...routeCodes.map((r) => ({ value: r, label: r }))]} />
-        <SearchInput label="Search customer" value={q} onChangeText={setQ} placeholder="name / route…" />
       </FilterBar>
 
       <AsyncState loading={loading} error={error} empty={!loading && !error && !k} onRetry={reload}>
@@ -59,7 +55,7 @@ export default function RevenueByCustomerScreen() {
               bars={isAllTime
                 ? [{ key: 'invoiced', label: 'Invoiced', color: '#10B981' }, { key: 'remaining', label: 'Remaining', color: '#F59E0B' }]
                 : [{ key: 'invoiced', label: 'Invoiced', color: '#10B981' }]} />
-            <DataTable title="Customers" columns={columns} rows={filtered} searchable={false} onRowClick={(r) => setSelected(r)} />
+            <DataTable title="Customers" columns={columns} rows={rows} searchPlaceholder="Search customer / route…" onRowClick={(r) => setSelected(r)} />
           </>
         ) : null}
       </AsyncState>

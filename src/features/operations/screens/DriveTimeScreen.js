@@ -49,6 +49,7 @@ export default function DriveTimeScreen() {
   const { range, setRange } = useFilters();
   const [routeCode, setRouteCode] = useState('all');
   const [sumPage, setSumPage] = useState(1);
+  const [sumQ, setSumQ] = useState('');
   const [drill, setDrill] = useState(null);
   const { from, to } = range;
 
@@ -57,16 +58,16 @@ export default function DriveTimeScreen() {
     () => (from && to ? biService.driveTime({ from, to, routeCode }) : Promise.resolve({ data: null })),
     [from, to, routeCode],
   );
-  useEffect(() => { setSumPage(1); }, [from, to, routeCode]);
+  useEffect(() => { setSumPage(1); }, [from, to, routeCode, sumQ]);
   const summaryApi = useApi(
-    () => (from && to ? biService.driveTime({ from, to, routeCode, page: sumPage, pageSize: 25 }) : Promise.resolve({ data: null })),
-    [from, to, routeCode, sumPage],
+    () => (from && to ? biService.driveTime({ from, to, routeCode, q: sumQ || undefined, page: sumPage, pageSize: 25 }) : Promise.resolve({ data: null })),
+    [from, to, routeCode, sumQ, sumPage],
   );
   const summaryRows = (summaryApi.data && summaryApi.data.summary) || [];
   const summaryTotal = (summaryApi.page && summaryApi.page.total) || 0;
   const summaryTotalPages = (summaryApi.page && summaryApi.page.totalPages) || 1;
   const exportSummary = async () => {
-    const res = await biService.driveTime({ from, to, routeCode, pageSize: 'all' });
+    const res = await biService.driveTime({ from, to, routeCode, q: sumQ || undefined, pageSize: 'all' });
     return (res && res.data && res.data.summary) || [];
   };
   const legsApi = useApi(
@@ -114,7 +115,7 @@ export default function DriveTimeScreen() {
               <BarChartCard title="Driving vs extra by route (min)" data={perRoute} xKey="routeCode"
                 bars={[{ key: 'driving', label: 'Driving (min)', color: '#2563EB' }, { key: 'extra', label: 'Extra (min)', color: '#F59E0B' }]} valueFormatter={formatMinutes} />
 
-              <DataTable title="Route / day summary" columns={summaryColumns} rows={summaryRows} onRowClick={(r) => setDrill(r)} onExportAll={exportSummary} exportName="drive-time-summary" />
+              <DataTable title="Route / day summary" columns={summaryColumns} rows={summaryRows} onServerSearch={setSumQ} searchPlaceholder="Search route / invoice…" onRowClick={(r) => setDrill(r)} onExportAll={exportSummary} exportName="drive-time-summary" />
               {summaryTotalPages > 1 ? (
                 <Pager page={sumPage} totalPages={summaryTotalPages} total={summaryTotal} loading={summaryApi.loading} onPrev={() => setSumPage((p) => Math.max(1, p - 1))} onNext={() => setSumPage((p) => Math.min(summaryTotalPages, p + 1))} />
               ) : null}
