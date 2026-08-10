@@ -27,12 +27,12 @@ const columns = [
   { key: 'serviceCategory', header: 'Service category', width: 180, render: (r) => r.serviceCategory || '—' },
   { key: 'serviceFrequency', header: 'Service frequency', width: 130, render: (r) => r.serviceFrequency || '—' },
   { key: 'servicePhase', header: 'Service phase', width: 120, render: (r) => r.servicePhase || '—' },
-  { key: 'revenueAmount', header: 'Revenue', align: 'right', width: 100, render: (r) => formatCurrency(r.revenueAmount) },
-  { key: 'chemicalSupplyCost', header: 'Chemical/supply cost', align: 'right', width: 150, render: (r) => (r.chemicalSupplyCost != null ? formatCurrency(r.chemicalSupplyCost) : '—') },
+  { key: 'revenueAmount', header: 'Revenue', align: 'right', width: 100, render: (r) => formatCurrency(r.revenueAmount), csv: (r) => formatCurrency(r.revenueAmount) },
+  { key: 'chemicalSupplyCost', header: 'Chemical/supply cost', align: 'right', width: 150, render: (r) => (r.chemicalSupplyCost != null ? formatCurrency(r.chemicalSupplyCost) : '—'), csv: (r) => (r.chemicalSupplyCost != null ? formatCurrency(r.chemicalSupplyCost) : '') },
   { key: 'accountStatus', header: 'Account status', width: 120, render: (r) => r.accountStatus || '—' },
   { key: 'statusDate', header: 'Status date', width: 110, render: (r) => (r.statusDate ? formatDateShort(r.statusDate) : '—') },
   { key: 'billingCadence', header: 'Billing cadence', width: 120, render: (r) => r.billingCadence || '—' },
-  { key: 'billingAmount', header: 'Billing amount', align: 'right', width: 110, render: (r) => (r.billingAmount != null ? formatCurrency(r.billingAmount) : '—') },
+  { key: 'billingAmount', header: 'Billing amount', align: 'right', width: 110, render: (r) => (r.billingAmount != null ? formatCurrency(r.billingAmount) : '—'), csv: (r) => (r.billingAmount != null ? formatCurrency(r.billingAmount) : '') },
 ];
 
 export default function DataPullScreen() {
