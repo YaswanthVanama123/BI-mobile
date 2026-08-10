@@ -10,6 +10,7 @@ const DEFAULT_W = 130;
 export default function DataTable({
   columns, rows, onRowClick, title, keyExtractor, exportName, onExportAll, onServerSearch,
   paginated = true, pageSize = 25, maxRows = 500, searchable = true, searchPlaceholder = 'Search…',
+  showIndex = true, indexHeader = 'S.No', indexWidth = 54,
 }) {
   const allData = Array.isArray(rows) ? rows : [];
   const [query, setQuery] = useState('');
@@ -30,7 +31,7 @@ export default function DataTable({
   const safePage = Math.min(page, totalPages - 1);
   const start = paginated ? safePage * pageSize : 0;
   const shown = paginated ? data.slice(start, start + pageSize) : data.slice(0, maxRows);
-  const totalW = columns.reduce((t, c) => t + (c.width || DEFAULT_W), 0);
+  const totalW = columns.reduce((t, c) => t + (c.width || DEFAULT_W), 0) + (showIndex ? indexWidth : 0);
 
   const alignItemsFor = (a) => (a === 'right' ? 'flex-end' : a === 'center' ? 'center' : 'flex-start');
   const exportFmt = useExportFormat();
@@ -45,7 +46,10 @@ export default function DataTable({
     try {
       const rowsToExport = onExportAll ? await onExportAll() : data;
       if (!rowsToExport || !rowsToExport.length) return;
-      await exportTable(columns, rowsToExport, exportName || title || 'export');
+      const exportColumns = showIndex
+        ? [{ key: '__sno', header: indexHeader, csv: (_r, ri) => String(ri + 1) }, ...columns]
+        : columns;
+      await exportTable(exportColumns, rowsToExport, exportName || title || 'export');
     } catch (e) {
       Alert.alert('Export failed', (e && e.message) || 'Could not export the table.');
     }
@@ -84,6 +88,11 @@ export default function DataTable({
       <ScrollView horizontal showsHorizontalScrollIndicator bounces={false} contentContainerStyle={styles.scrollContent}>
         <View style={{ width: totalW }}>
           <View style={styles.headerRow}>
+            {showIndex ? (
+              <View style={[styles.cell, { width: indexWidth, alignItems: 'flex-end' }]}>
+                <Text style={[styles.th, { textAlign: 'right' }]} numberOfLines={1}>{indexHeader}</Text>
+              </View>
+            ) : null}
             {columns.map((c) => (
               <View key={c.key} style={[styles.cell, { width: c.width || DEFAULT_W, alignItems: alignItemsFor(c.align) }]}>
                 <Text style={[styles.th, { textAlign: c.align || 'left' }]} numberOfLines={1}>{c.header}</Text>
@@ -99,6 +108,11 @@ export default function DataTable({
                 onPress={onRowClick ? () => onRowClick(row) : undefined}
                 activeOpacity={0.6}
               >
+                {showIndex ? (
+                  <View style={[styles.cell, { width: indexWidth, alignItems: 'flex-end' }]}>
+                    <Text style={[styles.td, { textAlign: 'right', color: theme.textFaint }]} numberOfLines={1}>{start + ri + 1}</Text>
+                  </View>
+                ) : null}
                 {columns.map((c) => {
                   const content = cellContent(c, row);
                   return (

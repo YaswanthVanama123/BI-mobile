@@ -19,15 +19,15 @@ function excelValue(v) {
   return s;
 }
 
-function cellFor(col, row) {
-  const raw = typeof col.csv === 'function' ? col.csv(row) : (col.accessor ? col.accessor(row) : row[col.key]);
+function cellFor(col, row, ri) {
+  const raw = typeof col.csv === 'function' ? col.csv(row, ri) : (col.accessor ? col.accessor(row, ri) : row[col.key]);
   return excelValue(raw);
 }
 
 export async function exportTable(columns, rows, filenameBase = 'export') {
   const cols = (columns || []).filter((c) => c.csv !== false && c.exportable !== false);
   const header = cols.map((c) => c.header || c.key);
-  const body = (rows || []).map((row) => cols.map((c) => cellFor(c, row)));
+  const body = (rows || []).map((row, ri) => cols.map((c) => cellFor(c, row, ri)));
   const aoa = [header, ...body];
 
   const XLSX = require('xlsx');
