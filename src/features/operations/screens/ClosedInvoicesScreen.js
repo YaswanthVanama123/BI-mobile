@@ -59,13 +59,13 @@ export default function ClosedInvoicesScreen() {
       </FilterBar>
       <RouteTabs routes={routes} value={route} onChange={setRoute} allLabel="All" />
 
-      <AsyncState loading={loading} error={error} empty={!loading && !error && rows.length === 0} onRetry={reload}>
-        {rows.length ? (
-          <>
-            <DataTable title="Closed invoices" columns={columns} rows={rows} paginated={false} onServerSearch={setQ} searchPlaceholder="Search invoice # / customer / technician…" onRowClick={(r) => setSelected(r.invoiceNumber)} onExportAll={exportAll} exportName="closed-invoices" />
+      <AsyncState loading={loading} error={error} hasData={rows.length > 0} onRetry={reload}>
+        <>
+          <DataTable title="Closed invoices" columns={columns} rows={rows} paginated={false} onServerSearch={setQ} searchPlaceholder="Search invoice # / customer / technician…" onRowClick={(r) => setSelected(r.invoiceNumber)} onExportAll={exportAll} exportName="closed-invoices" />
+          {totalPages > 1 ? (
             <Pager page={page} totalPages={totalPages} total={total} loading={loading} onPrev={() => setPage((p) => Math.max(1, p - 1))} onNext={() => setPage((p) => Math.min(totalPages, p + 1))} />
-          </>
-        ) : null}
+          ) : null}
+        </>
       </AsyncState>
 
       {selected ? <InvoiceLinesModal invoiceNumber={selected} onClose={() => setSelected(null)} /> : null}

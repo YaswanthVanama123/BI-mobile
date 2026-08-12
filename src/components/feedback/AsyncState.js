@@ -2,8 +2,8 @@ import React from 'react';
 import { View, Text, ActivityIndicator, TouchableOpacity, StyleSheet } from 'react-native';
 import theme from '@/theme';
 
-export default function AsyncState({ loading, error, empty, onRetry, children, emptyText = 'No data for this selection.' }) {
-  if (loading) {
+export default function AsyncState({ loading, error, empty, onRetry, children, emptyText = 'No data for this selection.', hasData = false }) {
+  if (loading && !hasData) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color={theme.colors.primary[600]} />
@@ -11,7 +11,7 @@ export default function AsyncState({ loading, error, empty, onRetry, children, e
       </View>
     );
   }
-  if (error) {
+  if (error && !hasData) {
     return (
       <View style={styles.center}>
         <Text style={styles.errTitle}>Couldn’t load data</Text>
@@ -24,7 +24,7 @@ export default function AsyncState({ loading, error, empty, onRetry, children, e
       </View>
     );
   }
-  if (empty) {
+  if (empty && !hasData) {
     return (
       <View style={styles.center}>
         <Text style={styles.msg}>{emptyText}</Text>

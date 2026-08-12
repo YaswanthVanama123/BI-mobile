@@ -340,13 +340,13 @@ export default function CustomersScreen() {
         </Card>
       ) : null}
 
-      <AsyncState loading={loading} error={error} empty={!loading && !error && rows.length === 0} onRetry={reload}>
-        {rows.length ? (
-          <>
-            <DataTable title="Customers" columns={columns} rows={rows} paginated={false} onServerSearch={setQ} searchPlaceholder="Search name / account # / RouteStar ID…" onRowClick={(r) => setSelected(r.routeStarCustomerId)} onExportAll={exportAll} exportName="customers" />
+      <AsyncState loading={loading} error={error} hasData={rows.length > 0} onRetry={reload}>
+        <>
+          <DataTable title="Customers" columns={columns} rows={rows} paginated={false} onServerSearch={setQ} searchPlaceholder="Search name / account # / RouteStar ID…" onRowClick={(r) => setSelected(r.routeStarCustomerId)} onExportAll={exportAll} exportName="customers" />
+          {totalPages > 1 ? (
             <Pager page={page} totalPages={totalPages} total={total} loading={loading} onPrev={() => setPage((p) => Math.max(1, p - 1))} onNext={() => setPage((p) => Math.min(totalPages, p + 1))} />
-          </>
-        ) : null}
+          ) : null}
+        </>
       </AsyncState>
 
       {selected ? <CustomerDetailModal customerId={selected} onClose={() => setSelected(null)} /> : null}

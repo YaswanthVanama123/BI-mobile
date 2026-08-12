@@ -64,13 +64,13 @@ export default function DataPullScreen() {
       </FilterBar>
       <Muted style={{ marginBottom: 8 }}>Chemical cost comes from an external source not yet connected — shown as “—”. Status date is the customer’s most recent activity date. Service phase is derived from frequency.</Muted>
 
-      <AsyncState loading={loading} error={error} empty={!loading && !error && rows.length === 0} onRetry={reload}>
-        {rows.length ? (
-          <>
-            <DataTable title="Data pull" columns={columns} rows={rows} paginated={false} searchable onServerSearch={setQ} searchPlaceholder="Search all stops…" onExportAll={exportAll} exportName="bi-data-pull" onRowClick={(r) => r.stopId && setSelected(r.stopId)} />
+      <AsyncState loading={loading} error={error} hasData={rows.length > 0} onRetry={reload}>
+        <>
+          <DataTable title="Data pull" columns={columns} rows={rows} paginated={false} searchable onServerSearch={setQ} searchPlaceholder="Search all stops…" onExportAll={exportAll} exportName="bi-data-pull" onRowClick={(r) => r.stopId && setSelected(r.stopId)} />
+          {totalPages > 1 ? (
             <Pager page={page} totalPages={totalPages} total={total} loading={loading} onPrev={() => setPage((p) => Math.max(1, p - 1))} onNext={() => setPage((p) => Math.min(totalPages, p + 1))} />
-          </>
-        ) : null}
+          ) : null}
+        </>
       </AsyncState>
       {selected ? <InvoiceLinesModal invoiceNumber={selected} onClose={() => setSelected(null)} /> : null}
     </Screen>
